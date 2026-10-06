@@ -58,12 +58,13 @@ unknowns:
 
 # What makes a tool an "approved enterprise tool" for tier_if_approved_tool.
 approved_tool:
-  vendor_handling_levels: [self_hosted, enterprise_zdr]
+  vendor_handling_levels: [self_hosted, enterprise_zdr, enterprise_limited_retention]
   requires_register_listing: true
   notes: >
-    Strict definition chosen in the interview. Consequence: a vendor with
-    limited retention (enterprise_limited_retention) is never "approved", so
-    company confidential data in that vendor's tool is Prohibited, not High.
+    Interview answer was Strict (self-hosted or ZDR only). Recalibrated to
+    Standard (also allows limited retention) after a review showed Strict
+    would exclude most enterprise AI offerings, many of which retain data for
+    a short abuse-monitoring window by default (VERIFY per vendor).
 
 dimensions:
 
@@ -79,7 +80,8 @@ dimensions:
         tier: Low
       - id: internal
         description: Internal, non-sensitive business information (process docs, general emails).
-        tier: Medium
+        tier: Low
+        notes: Interview answer was Medium; recalibrated to Low because nearly every use touches internal data.
       - id: company_confidential
         description: Company confidential information (financials, strategy, unreleased products).
         tier: Prohibited
@@ -87,9 +89,16 @@ dimensions:
       - id: third_party_confidential
         description: Third-party confidential information held under NDA or contract (customer or partner information).
         tier: Prohibited
+        tier_if_approved_tool: High
+        notes: Interview answer was absolute; recalibrated to High in an approved tool.
       - id: privileged
         description: Privileged communications or attorney work product.
         tier: Prohibited
+        tier_if_approved_tool: High
+        notes: >
+          Interview answer was absolute; recalibrated to High in an approved
+          tool so the legal department can use AI on its own work. Whether use
+          in an approved tool preserves privilege is a VERIFY flag below.
       - id: trade_secrets
         description: Trade secrets or proprietary source code.
         tier: Prohibited
@@ -101,8 +110,10 @@ dimensions:
         tier: Prohibited
     notes: >
       The six Prohibited categories were first answered "Prohibited", then
-      confirmed row by row: only company_confidential is conditional (High in
-      an approved tool). The other five are absolute.
+      confirmed row by row (company_confidential conditional, the other five
+      absolute). On a later calibration review, third_party_confidential and
+      privileged were also made conditional. trade_secrets, security_secrets,
+      and mnpi remain absolute.
 
   - id: personal_data
     name: Personal data
@@ -115,8 +126,11 @@ dimensions:
       - id: employee_contact
         description: Employee business contact information (name, work email, title).
         tier: Prohibited
-        tier_if_approved_tool: Medium
-        notes: First answered "High if approved"; changed to "Medium if approved" on follow-up.
+        tier_if_approved_tool: Low
+        notes: >
+          First answered "High if approved"; changed to "Medium if approved" on
+          follow-up; recalibrated to "Low if approved" because employee names
+          appear in nearly all internal content.
       - id: customer_basic
         description: Customer or consumer basic data (name, contact, order or account history).
         tier: Prohibited
@@ -246,19 +260,21 @@ dimensions:
         tier: Low
       - id: customer_reliance_verified
         description: Output states facts customers may rely on (warranty terms, pricing, specs, policies), and a person verifies them first.
-        tier: High
+        tier: Medium
       - id: customer_reliance_unverified
         description: Output states facts customers may rely on, with no per-response verification.
         tier: High
       - id: critical_reliance_verified
         description: Output relied on for legal, regulatory, financial reporting, or safety purposes, verified by a qualified person before use.
-        tier: High
+        tier: Medium
       - id: critical_reliance_unverified
         description: Output relied on for legal, regulatory, financial reporting, or safety purposes with no qualified verification.
         tier: Prohibited
     notes: >
       Customer and critical reliance were first answered "Prohibited" outright,
-      then split on follow-up by whether a person verifies before use.
+      then split on follow-up by whether a person verifies before use. On a
+      later calibration review, both verified levels moved from High to
+      Medium, matching the one-step-down treatment of reviewed external output.
 
 controls:
   cumulative: true
@@ -275,14 +291,24 @@ controls:
     bias_testing: Bias and disparate impact testing, results documented.
     monitoring: Ongoing monitoring with periodic sampling of outputs.
     incident_kill_switch: Documented incident path and the ability to shut the use off quickly.
+    bot_disclosure: People are told at the start of the interaction that they are dealing with AI, not a person.
   by_tier:   # additions per tier; higher tiers inherit everything below
     Low: [approved_tool_only, aup_training, human_review, register_entry, ai_disclosure, logging]
     Medium: [privacy_review, security_review]
-    High: [accuracy_testing, bias_testing, monitoring, incident_kill_switch]
+    High: [accuracy_testing, monitoring, incident_kill_switch]
+  # Controls required by a specific situation, whatever the tier.
+  triggered:
+    - control: bias_testing
+      triggered_by: [decision_impact.person_decision_human]
+    - control: bot_disclosure
+      triggered_by: [audience.external_direct]
   notes: >
     human_review and aup_training were first selected for High only, then
     moved to Low (all tiers) on follow-up. A signed decision memo is not a
     control; the kit generates a memo for every assessment (Stage 5).
+    On a calibration review, bias_testing moved from every High use to a
+    triggered control (decisions about people), and bot_disclosure was added
+    for live customer-facing AI.
 
 approvers:
   cumulative: true
@@ -338,8 +364,11 @@ vendor_requirements:
   - id: zdr_available
     name: Zero data retention available
     standard: Vendor offers zero data retention for our inputs and outputs.
-    severity: must_have
-    notes: Derived from the approved_tool definition (self-hosted or ZDR only), not asked separately.
+    severity: preferred
+    notes: >
+      Was must_have when derived from the Strict approved_tool definition.
+      After approved_tool moved to Standard, ZDR is no longer required for
+      approval, so this is preferred. CONFIRM with the rubric owner.
   - id: retention
     name: Retention limit
     standard: Where ZDR is not used, our inputs and outputs are deleted no later than termination.
@@ -417,6 +446,11 @@ regulatory_flags:
   - id: bot_disclosure
     topic: State laws requiring disclosure that a customer is interacting with a bot
     applies_to: [audience.external_direct]
+    status: VERIFY
+    citation: "VERIFY: [citation needed]"
+  - id: privilege_ai_tools
+    topic: Whether processing privileged material in a third-party AI tool waives privilege or work product protection
+    applies_to: [data_sensitivity.privileged]
     status: VERIFY
     citation: "VERIFY: [citation needed]"
   - id: unauthorized_practice

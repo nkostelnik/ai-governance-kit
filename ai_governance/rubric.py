@@ -148,6 +148,22 @@ class TierMap(Strict):
         return result
 
 
+class TriggeredControl(Strict):
+    control: str
+    triggered_by: list[str]   # "dimension_id.level_id"
+
+
+class Controls(TierMap):
+    triggered: list[TriggeredControl] = []
+
+    @model_validator(mode="after")
+    def triggered_controls_in_catalog(self):
+        unknown = {t.control for t in self.triggered} - set(self.catalog)
+        if unknown:
+            raise ValueError(f"triggered controls not in the catalog: {sorted(unknown)}")
+        return self
+
+
 class ProhibitedException(Strict):
     allowed: bool
     joint_approval: list[str] = []
@@ -212,7 +228,7 @@ class Rubric(Strict):
     unknowns: Unknowns
     approved_tool: ApprovedTool
     dimensions: list[Dimension]
-    controls: TierMap
+    controls: Controls
     approvers: Approvers
     review: Review
     vendor_requirements: list[VendorRequirement]
@@ -238,11 +254,12 @@ class Rubric(Strict):
             if not self._has_level("vendor_handling", level_id):
                 raise ValueError(f"approved_tool points at unknown level 'vendor_handling.{level_id}'")
 
-        for flag in self.regulatory_flags:
-            for ref in flag.applies_to:
-                dim_id, _, level_id = ref.partition(".")
-                if not self._has_level(dim_id, level_id):
-                    raise ValueError(f"flag {flag.id!r} points at unknown level {ref!r}")
+        refs = [(f"flag {f.id!r}", ref) for f in self.regulatory_flags for ref in f.applies_to]
+        refs += [(f"triggered control {t.control!r}", ref) for t in self.controls.triggered for ref in t.triggered_by]
+        for owner, ref in refs:
+            dim_id, _, level_id = ref.partition(".")
+            if not self._has_level(dim_id, level_id):
+                raise ValueError(f"{owner} points at unknown level {ref!r}")
         return self
 
     def _has_level(self, dimension_id: str, level_id: str) -> bool:

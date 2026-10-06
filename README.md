@@ -20,7 +20,7 @@ attorney-authored rubric. The model never picks the tier.
 | 3 | Tiering engine (deterministic, unit-tested) | Not started |
 | 4 | AI vendor terms review | Not started |
 | 5 | Register, reassessment triggers, decision memo | Not started |
-| 6 | Eval harness | Not started |
+| 6 | Eval harness (false-Low rate and over-escalation rate) | Not started |
 | 7 | CLI (`assess.py`, `vendor_review.py`) | Not started |
 
 ## What exists today
@@ -42,6 +42,26 @@ attorney-authored rubric. The model never picks the tier.
 Every position in the rubric came from a one-question-at-a-time interview with
 the rubric owner. Follow-up confirmations and changed answers are recorded in
 `notes` fields in the YAML.
+
+### Calibration
+
+The first version of the rubric was strict enough that most realistic
+requests landed at High or Prohibited, including the legal department's own
+drafting work. A rubric that rates everything High stops sorting risk and
+becomes a queue. A calibration review walked four everyday requests through
+it and made seven changes:
+
+- privileged and third-party confidential data allowed (High) in an approved tool;
+- approved tools may have limited retention, not only zero retention;
+- internal data and employee contact info lowered to Low;
+- human-verified customer-facing and critical output lowered to Medium;
+- bias testing and bot disclosure attached to the situations that need
+  them, instead of to every High use.
+
+Each change is marked as a recalibration in the YAML `notes`. The eval
+harness (Stage 6) will report both the dangerous error (false-Low) and the
+friction error (over-escalation), because a governance tool can fail in
+either direction.
 
 ## Setup
 

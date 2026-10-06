@@ -22,8 +22,8 @@ Employees, contractors, and vendors acting on our behalf.
 ## 3. Baseline rules (every AI use)
 
 1. **Use only approved tools.** An approved tool is self-hosted or runs under
-   an enterprise contract with no training on our data and zero data
-   retention, and is listed in the AI register. Personal or consumer AI
+   an enterprise contract with no training on our data, a DPA, and either
+   zero or limited data retention, and is listed in the AI register. Personal or consumer AI
    accounts (free tiers, click-through terms) may not be used for company work.
 2. **Complete training first.** Acknowledge this policy and complete AI
    training before using any AI tool for work.
@@ -40,8 +40,6 @@ Employees, contractors, and vendors acting on our behalf.
 
 These are prohibited in any AI tool, approved or not:
 
-- Third-party confidential information held under an NDA or contract
-- Privileged communications or attorney work product
 - Trade secrets or proprietary source code
 - Credentials, secrets, or security configurations
 - Material non-public information (MNPI)
@@ -56,8 +54,13 @@ These are prohibited in any AI tool, approved or not:
 These are allowed **only in an approved tool**, after the use case is assessed:
 
 - Company confidential information (High tier)
+- Third-party confidential information held under an NDA or contract (High
+  tier). Check the NDA or contract first; it may restrict this use.
+- Privileged communications or attorney work product (High tier).
+  VERIFY: [citation needed] (whether use in a third-party AI tool affects
+  privilege or work product protection).
 - Customer or consumer basic data (High tier)
-- Employee business contact information (Medium tier)
+- Employee business contact information (Low tier)
 
 ## 5. Prohibited uses
 
@@ -84,8 +87,12 @@ tier. Three or more Medium ratings make the use High.
 |---|---|---|---|
 | Low | Baseline rules (section 3) | Business owner self-certifies; AI enablement lead spot-checks | Annually |
 | Medium | Plus privacy review and security review | Plus AI enablement lead, Privacy, Information security | Every 6 months |
-| High | Plus accuracy testing, bias testing, ongoing monitoring, incident path and kill switch | Plus assigned counsel and the AI governance committee | Quarterly |
+| High | Plus accuracy testing, ongoing monitoring, incident path and kill switch | Plus assigned counsel and the AI governance committee | Quarterly |
 | Prohibited | Not allowed | Exception only by GC and AI governance committee jointly | n/a |
+
+Some controls apply because of the situation, whatever the tier: bias testing
+whenever AI output informs a decision about a specific person, and bot
+disclosure whenever AI interacts directly with customers or the public.
 
 If the intake cannot establish a fact, that factor is treated as Medium until
 answered, and no use case is approved with open questions.
@@ -106,8 +113,8 @@ jurisdiction, or a relevant change in law.
 - **Images, voice, or video depicting real people:** only with the person's
   written consent and Legal approval. VERIFY: [citation needed] (state right
   of publicity and digital replica laws).
-- **Customer-facing chatbots and voice agents:** High tier at minimum.
-  VERIFY: [citation needed] (state bot disclosure laws).
+- **Customer-facing chatbots and voice agents:** High tier at minimum, and
+  people must be told at the start that they are dealing with AI. VERIFY: [citation needed] (state bot disclosure laws).
 
 ## 9. Reporting unapproved AI use
 
