@@ -1,0 +1,426 @@
+# AI use-case risk rubric
+#
+# DEMONSTRATION RUBRIC. Not legal advice. Every output built from this file
+# requires attorney review.
+#
+# Every position in this file came from an interview with the rubric owner
+# (an attorney). Nothing here was invented by the tool. Where a value is a
+# structural default rather than an interview answer, a `notes` field says so.
+# Where an answer was confirmed or changed on a follow-up question, `notes`
+# records that too.
+#
+# How to read this file:
+#   dimensions  - the risk factors an AI use case is rated on. Each dimension
+#                 lists levels (fact patterns). The intake step (Stage 2)
+#                 decides which levels apply, with a quote for each; this file
+#                 decides what tier each level gets. The model never picks a tier.
+#   tier_if_approved_tool
+#               - some levels are Prohibited in general but allowed at a lower
+#                 tier inside an "approved enterprise tool" (defined below).
+#   controls / approvers
+#               - cumulative: a tier requires its own list plus every lower tier's.
+#   regulatory_flags
+#               - laws that may be relevant. None is stated as settled law;
+#                 each stays "VERIFY" until counsel adds a citation and a date.
+
+version: 1
+
+jurisdiction_scope: >
+  US, multi-state (employees and customers in several states, including
+  Colorado, New York City, and California). Non-US regimes are out of scope
+  for this version.
+
+tiers:
+  Low: Proceed in an approved tool with baseline controls. Self-certified, spot-checked.
+  Medium: Proceed after privacy and security review.
+  High: Proceed only after legal and AI governance committee approval, with testing and monitoring.
+  Prohibited: Do not proceed. Exception only by joint decision of the General Counsel and the AI governance committee.
+
+# How dimension ratings combine into the overall tier.
+aggregation:
+  method: worst_dimension_wins
+  stacking:
+    min_count: 3        # three or more dimensions rated...
+    at_tier: Medium     # ...Medium...
+    raises_to: High     # ...raise the overall tier to High.
+  # Stacking never produces Prohibited. Prohibited comes only from a level
+  # rated Prohibited.
+
+# Fail-closed behavior. A fact the intake cannot establish (or whose supporting
+# quote does not verify against the description) is "unknown".
+unknowns:
+  rating: Medium            # an unknown dimension is rated Medium, never Low
+  flag: needs_review
+  finalize_with_open_questions: false   # every follow-up must be answered before approval
+  notes: >
+    Under the stacking rule, three or more unknown dimensions make the interim
+    tier High. That is intended (fail closed).
+
+# What makes a tool an "approved enterprise tool" for tier_if_approved_tool.
+approved_tool:
+  vendor_handling_levels: [self_hosted, enterprise_zdr]
+  requires_register_listing: true
+  notes: >
+    Strict definition chosen in the interview. Consequence: a vendor with
+    limited retention (enterprise_limited_retention) is never "approved", so
+    company confidential data in that vendor's tool is Prohibited, not High.
+
+dimensions:
+
+  - id: data_sensitivity
+    name: Data sensitivity
+    description: >
+      The most sensitive non-personal business information the AI use touches
+      (inputs, retrieval sources, or outputs). Rated on the data itself,
+      assuming an approved tool; vendor risk is a separate dimension.
+    levels:
+      - id: public
+        description: Public information (press releases, published documents).
+        tier: Low
+      - id: internal
+        description: Internal, non-sensitive business information (process docs, general emails).
+        tier: Medium
+      - id: company_confidential
+        description: Company confidential information (financials, strategy, unreleased products).
+        tier: Prohibited
+        tier_if_approved_tool: High
+      - id: third_party_confidential
+        description: Third-party confidential information held under NDA or contract (customer or partner information).
+        tier: Prohibited
+      - id: privileged
+        description: Privileged communications or attorney work product.
+        tier: Prohibited
+      - id: trade_secrets
+        description: Trade secrets or proprietary source code.
+        tier: Prohibited
+      - id: security_secrets
+        description: Credentials, secrets, or security configurations (passwords, API keys, network diagrams).
+        tier: Prohibited
+      - id: mnpi
+        description: Material non-public information (for example, deal information before announcement).
+        tier: Prohibited
+    notes: >
+      The six Prohibited categories were first answered "Prohibited", then
+      confirmed row by row: only company_confidential is conditional (High in
+      an approved tool). The other five are absolute.
+
+  - id: personal_data
+    name: Personal data
+    description: The most sensitive personal data the AI use touches.
+    levels:
+      - id: no_personal_data
+        description: No personal data.
+        tier: Low
+        notes: Structural default (not an interview answer); absence of personal data cannot raise risk.
+      - id: employee_contact
+        description: Employee business contact information (name, work email, title).
+        tier: Prohibited
+        tier_if_approved_tool: Medium
+        notes: First answered "High if approved"; changed to "Medium if approved" on follow-up.
+      - id: customer_basic
+        description: Customer or consumer basic data (name, contact, order or account history).
+        tier: Prohibited
+        tier_if_approved_tool: High
+      - id: employee_hr
+        description: Employee HR records (performance, compensation, discipline).
+        tier: Prohibited
+      - id: ids_financial
+        description: Government IDs or financial account numbers (SSN, driver's license, bank or card numbers).
+        tier: Prohibited
+      - id: health
+        description: Health or medical information.
+        tier: Prohibited
+      - id: biometric
+        description: Biometric data (face geometry, voiceprints, fingerprints).
+        tier: Prohibited
+      - id: minors
+        description: Data about minors (under 18).
+        tier: Prohibited
+      - id: other_sensitive
+        description: Other sensitive categories (race, religion, sexual orientation, precise geolocation, immigration status).
+        tier: Prohibited
+
+  - id: decision_impact
+    name: Decision impact and human-in-the-loop
+    description: What happens to the output, and how much a person controls the outcome.
+    levels:
+      - id: draft_reviewed
+        description: Output is a draft or idea that a person reviews and edits before any use.
+        tier: Low
+      - id: business_decision_human
+        description: Output informs a business decision (not about a specific person) and a person makes the call.
+        tier: Low
+      - id: automated_action
+        description: AI takes actions automatically with no per-action human review (sends messages, updates systems), not about a specific person.
+        tier: High
+      - id: person_decision_human
+        description: Output informs a decision about a specific person (rank, score, recommend) and a person makes the final call.
+        tier: High
+      - id: person_decision_automated
+        description: AI makes, or effectively makes, a decision about a specific person with no meaningful human review.
+        tier: Prohibited
+
+  - id: regulated_domain
+    name: Regulated domain
+    description: Whether the use operates in a regulated domain, and whether it informs decisions about people there.
+    levels:
+      - id: no_regulated_domain
+        description: Not in any listed regulated domain.
+        tier: Low
+        notes: Structural default (not an interview answer).
+      - id: domain_not_individual
+        description: Work in a listed domain that is not about specific people (drafting a job posting, summarizing a lending regulation).
+        tier: Medium
+        notes: First answered High; changed to Medium on follow-up.
+      - id: employment_decision
+        description: AI-assisted employment decisions (screening, hiring, promotion, discipline, termination), even with a human final call.
+        tier: Prohibited
+      - id: credit_decision
+        description: AI-assisted credit, lending, or financial eligibility decisions.
+        tier: Prohibited
+      - id: insurance_decision
+        description: AI-assisted insurance decisions (eligibility, pricing, claims).
+        tier: Prohibited
+      - id: housing_decision
+        description: AI-assisted housing decisions (tenant screening, rental or sale).
+        tier: Prohibited
+      - id: health_care_decision
+        description: AI-assisted health care decisions (diagnosis, treatment, access to care).
+        tier: Prohibited
+      - id: minors_education
+        description: Education or services directed at minors.
+        tier: Prohibited
+      - id: legal_services_external
+        description: Legal services or legal advice to people outside the company.
+        tier: Prohibited
+
+  - id: audience
+    name: Audience
+    description: Who sees or interacts with the output.
+    levels:
+      - id: personal_use
+        description: Only the person using the tool sees the output.
+        tier: Low
+      - id: internal_shared
+        description: Output is shared internally (team or company-wide).
+        tier: Low
+      - id: external_reviewed
+        description: Output goes to customers, partners, or the public after a person reviews it.
+        tier: Medium
+      - id: external_direct
+        description: AI interacts directly with customers or the public in real time, with no review of each response (chatbot, voice agent).
+        tier: High
+
+  - id: vendor_handling
+    name: Vendor data handling
+    description: What the tool's provider does with our inputs and outputs.
+    levels:
+      - id: self_hosted
+        description: Self-hosted or private-cloud model; our data never leaves our environment.
+        tier: Low
+      - id: enterprise_zdr
+        description: Enterprise contract with no training on our data, zero data retention, and a DPA.
+        tier: Low
+      - id: enterprise_limited_retention
+        description: Enterprise contract with no training and a DPA, but limited retention (for example, 30 days for abuse monitoring).
+        tier: Medium
+      - id: vendor_trains
+        description: Vendor reserves the right to train on our inputs or outputs, even if an opt-out exists.
+        tier: Prohibited
+      - id: consumer_tool
+        description: Consumer or free-tier tool used under click-through terms, no enterprise contract.
+        tier: Prohibited
+      - id: vendor_unknown
+        description: Vendor terms not yet reviewed.
+        tier: Prohibited
+
+  - id: accuracy_criticality
+    name: Accuracy criticality
+    description: How bad it is if the output is wrong.
+    levels:
+      - id: errors_harmless
+        description: Errors are obvious and harmless (brainstorming, first drafts, tone rewrites).
+        tier: Low
+      - id: errors_moderate
+        description: Errors cause rework or modest cost, and normal review would likely catch them.
+        tier: Low
+      - id: customer_reliance_verified
+        description: Output states facts customers may rely on (warranty terms, pricing, specs, policies), and a person verifies them first.
+        tier: High
+      - id: customer_reliance_unverified
+        description: Output states facts customers may rely on, with no per-response verification.
+        tier: High
+      - id: critical_reliance_verified
+        description: Output relied on for legal, regulatory, financial reporting, or safety purposes, verified by a qualified person before use.
+        tier: High
+      - id: critical_reliance_unverified
+        description: Output relied on for legal, regulatory, financial reporting, or safety purposes with no qualified verification.
+        tier: Prohibited
+    notes: >
+      Customer and critical reliance were first answered "Prohibited" outright,
+      then split on follow-up by whether a person verifies before use.
+
+controls:
+  cumulative: true
+  catalog:
+    approved_tool_only: Use only tools that meet the approved_tool definition and are listed in the register.
+    aup_training: User has acknowledged the AI acceptable use policy and completed AI training.
+    human_review: A person reviews AI output before it is used or sent.
+    register_entry: The use case is recorded in the AI register with an owner and review date.
+    ai_disclosure: Recipients are told when content they receive was generated with AI.
+    logging: Prompts and outputs are logged and retained for audit.
+    privacy_review: Privacy review (privacy impact assessment) completed.
+    security_review: Information security review completed.
+    accuracy_testing: Pre-launch accuracy testing on representative cases, results documented.
+    bias_testing: Bias and disparate impact testing, results documented.
+    monitoring: Ongoing monitoring with periodic sampling of outputs.
+    incident_kill_switch: Documented incident path and the ability to shut the use off quickly.
+  by_tier:   # additions per tier; higher tiers inherit everything below
+    Low: [approved_tool_only, aup_training, human_review, register_entry, ai_disclosure, logging]
+    Medium: [privacy_review, security_review]
+    High: [accuracy_testing, bias_testing, monitoring, incident_kill_switch]
+  notes: >
+    human_review and aup_training were first selected for High only, then
+    moved to Low (all tiers) on follow-up. A signed decision memo is not a
+    control; the kit generates a memo for every assessment (Stage 5).
+
+approvers:
+  cumulative: true
+  catalog:
+    business_owner: Named business owner accountable for the use case.
+    ai_enablement_lead: AI enablement lead.
+    privacy: Privacy team.
+    infosec: Information security.
+    legal: Assigned counsel.
+    ai_governance_committee: AI governance committee.
+    general_counsel: General Counsel.
+  by_tier:   # additions per tier; higher tiers inherit everything below
+    Low: [business_owner]
+    Medium: [ai_enablement_lead, privacy, infosec]
+    High: [legal, ai_governance_committee]
+  low_tier_mode: >
+    Self-certify: the business owner certifies the use runs in an approved
+    tool and records it in the register. The AI enablement lead spot-checks
+    a sample of Low entries.
+  prohibited_exception:
+    allowed: true
+    joint_approval: [general_counsel, ai_governance_committee]
+    notes: The register records who granted each exception and why.
+  notes: >
+    Low was first answered "AI enablement lead approves each"; changed to
+    self-certify with spot-checks on follow-up. business_owner was added at
+    all tiers on follow-up.
+
+review:
+  cadence_months: {Low: 12, Medium: 6, High: 3}
+  reassessment_triggers:
+    new_data_type: A new category of data is used.
+    new_vendor: The tool or provider changes.
+    expanded_audience: The output reaches a wider audience (for example, internal to external).
+    new_purpose: The use is applied to a new purpose.
+    more_automation: Human review is reduced or the AI acts with more autonomy.
+    vendor_terms_change: The provider's terms, DPA, or AI addendum change.
+    incident_or_complaint: An incident, error, or complaint involving the use.
+    new_jurisdiction: The use expands to a new state or country.
+    regulatory_change: A relevant law or regulation changes.
+  notes: >
+    more_automation was added on follow-up. "New model or major model
+    version" was deliberately not selected.
+
+# AI vendor terms requirements (used by Stage 4 vendor review).
+# must_have gap = blocker; preferred gap = flag for negotiation.
+vendor_requirements:
+  - id: no_training
+    name: No training on our data
+    standard: Vendor does not use our inputs or outputs to train or improve models.
+    severity: must_have
+    notes: Derived from vendor_handling.vendor_trains = Prohibited, not asked separately.
+  - id: zdr_available
+    name: Zero data retention available
+    standard: Vendor offers zero data retention for our inputs and outputs.
+    severity: must_have
+    notes: Derived from the approved_tool definition (self-hosted or ZDR only), not asked separately.
+  - id: retention
+    name: Retention limit
+    standard: Where ZDR is not used, our inputs and outputs are deleted no later than termination.
+    severity: must_have
+  - id: subprocessors
+    name: Subprocessors
+    standard: Subprocessor list disclosed, advance notice of changes, and a right to object.
+    severity: preferred
+  - id: output_ip_indemnity
+    name: Output IP indemnity
+    standard: Vendor indemnifies us against third-party IP claims arising from AI output.
+    severity: preferred
+  - id: confidentiality
+    name: Confidentiality
+    standard: Our inputs and outputs are treated as our Confidential Information.
+    severity: must_have
+  - id: security
+    name: Security commitments
+    standard: SOC 2 Type II or ISO 27001, plus notice of a security breach affecting our data within 72 hours.
+    severity: must_have
+    notes: 72 hours is a contract position, not a statement of what any law requires.
+  - id: output_ownership
+    name: Output ownership
+    standard: We own the AI outputs, or the vendor assigns its rights in them to us.
+    severity: must_have
+
+# Laws that may bear on a level. Nothing here is a legal conclusion.
+# status VERIFY = counsel must confirm; status verified requires a citation and a date.
+regulatory_flags:
+  - id: colorado_ai_act
+    topic: Colorado AI Act (high-risk AI systems, consequential decisions)
+    applies_to: [regulated_domain.employment_decision, regulated_domain.credit_decision, regulated_domain.insurance_decision, regulated_domain.housing_decision, regulated_domain.health_care_decision, decision_impact.person_decision_human]
+    status: VERIFY
+    citation: "VERIFY: [citation needed]"
+  - id: nyc_ll144
+    topic: NYC Local Law 144 (automated employment decision tools)
+    applies_to: [regulated_domain.employment_decision]
+    status: VERIFY
+    citation: "VERIFY: [citation needed]"
+  - id: state_privacy_laws
+    topic: State consumer privacy laws (for example, California) on personal data and automated decision-making
+    applies_to: [personal_data.customer_basic, personal_data.other_sensitive, decision_impact.person_decision_automated]
+    status: VERIFY
+    citation: "VERIFY: [citation needed]"
+  - id: health_privacy
+    topic: Health information privacy (for example, HIPAA where applicable)
+    applies_to: [personal_data.health, regulated_domain.health_care_decision]
+    status: VERIFY
+    citation: "VERIFY: [citation needed]"
+  - id: biometric_privacy
+    topic: State biometric privacy laws (for example, Illinois BIPA)
+    applies_to: [personal_data.biometric]
+    status: VERIFY
+    citation: "VERIFY: [citation needed]"
+  - id: childrens_privacy
+    topic: Children's online privacy (for example, COPPA)
+    applies_to: [personal_data.minors, regulated_domain.minors_education]
+    status: VERIFY
+    citation: "VERIFY: [citation needed]"
+  - id: fair_lending_credit
+    topic: Fair lending and consumer credit laws
+    applies_to: [regulated_domain.credit_decision]
+    status: VERIFY
+    citation: "VERIFY: [citation needed]"
+  - id: fair_housing
+    topic: Fair housing laws
+    applies_to: [regulated_domain.housing_decision]
+    status: VERIFY
+    citation: "VERIFY: [citation needed]"
+  - id: insurance_ai
+    topic: State insurance rules on AI and external data in underwriting and claims
+    applies_to: [regulated_domain.insurance_decision]
+    status: VERIFY
+    citation: "VERIFY: [citation needed]"
+  - id: bot_disclosure
+    topic: State laws requiring disclosure that a customer is interacting with a bot
+    applies_to: [audience.external_direct]
+    status: VERIFY
+    citation: "VERIFY: [citation needed]"
+  - id: unauthorized_practice
+    topic: Unauthorized practice of law and attorney professional responsibility rules
+    applies_to: [regulated_domain.legal_services_external]
+    status: VERIFY
+    citation: "VERIFY: [citation needed]"

@@ -1,0 +1,14 @@
+# secrets
+.env
+
+# local artifacts
+output/
+evals/results/
+*.db
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
