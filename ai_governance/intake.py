@@ -247,14 +247,14 @@ def run_intake(description: str, rubric: Rubric | None = None, call: LLMCall = l
 
 if __name__ == "__main__":
     # Smoke-test helper: python -m ai_governance.intake samples/intakes/warranty_chatbot.txt
-    usage = {}
+    usage: list[llm.LLMResult] = []
 
     def call_and_record(system, user, output_format):
-        result = llm.parse(system, user, output_format)
-        usage.update(stop_reason=result.stop_reason, input=result.input_tokens, output=result.output_tokens)
-        return result
+        usage.append(llm.parse(system, user, output_format))
+        return usage[-1]
 
     with open(sys.argv[1], encoding="utf-8") as f:
         print(run_intake(f.read(), call=call_and_record).model_dump_json(indent=2))
-    cost = usage["input"] * 2 / 1e6 + usage["output"] * 10 / 1e6   # Sonnet 5.5: $2 / $10 per million tokens
-    print(f"[{usage['stop_reason']}] {usage['input']} in / {usage['output']} out tokens, about ${cost:.3f}", file=sys.stderr)
+    u = usage[0]
+    print(f"[{u.stop_reason}] input {u.input_tokens} + cache write {u.cache_write_tokens} + cache read "
+          f"{u.cache_read_tokens}, output {u.output_tokens} tokens, about ${u.cost_usd():.3f}", file=sys.stderr)

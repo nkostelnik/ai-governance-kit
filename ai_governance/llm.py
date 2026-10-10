@@ -41,8 +41,15 @@ class LLMResult(BaseModel):
 
     parsed: object | None          # an instance of the requested output_format, or None
     stop_reason: str | None
-    input_tokens: int = 0
+    input_tokens: int = 0          # uncached input
+    cache_write_tokens: int = 0    # billed at 1.25x input
+    cache_read_tokens: int = 0     # billed at 0.1x input
     output_tokens: int = 0
+
+    def cost_usd(self, input_per_m: float = 2.0, output_per_m: float = 10.0) -> float:
+        """Approximate cost at Sonnet 5.5 list prices ($2 / $10 per million tokens)."""
+        billed_input = self.input_tokens + 1.25 * self.cache_write_tokens + 0.1 * self.cache_read_tokens
+        return (billed_input * input_per_m + self.output_tokens * output_per_m) / 1e6
 
 
 def parse(system: str, user: str, output_format: type[T], effort: str = "medium") -> LLMResult:
@@ -51,11 +58,13 @@ def parse(system: str, user: str, output_format: type[T], effort: str = "medium"
     response = client.beta.messages.parse(
         model=MODEL,
         max_tokens=16000,
-        system=system,
+        # Cache the system prompt (identical across calls). The marker goes on
+        # the system block, not the whole request: the user message differs
+        # every call, so caching through it would never produce a cache hit.
+        system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
         messages=[{"role": "user", "content": user}],
         output_format=output_format,
         output_config={"effort": effort},
-        cache_control={"type": "ephemeral"},   # the system prompt is identical across calls
         # If a safety classifier declines, retry server-side on Anthropic's
         # recommended fallback model instead of failing outright.
         betas=["server-side-fallback-2026-07-01"],
@@ -66,5 +75,7 @@ def parse(system: str, user: str, output_format: type[T], effort: str = "medium"
         parsed=response.parsed_output if usable else None,
         stop_reason=response.stop_reason,
         input_tokens=response.usage.input_tokens,
+        cache_write_tokens=response.usage.cache_creation_input_tokens or 0,
+        cache_read_tokens=response.usage.cache_read_input_tokens or 0,
         output_tokens=response.usage.output_tokens,
     )

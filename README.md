@@ -16,7 +16,7 @@ attorney-authored rubric. The model never picks the tier.
 | Stage | What | Status |
 |---|---|---|
 | 1 | Rubric and acceptable use policy | Done |
-| 2 | Intake pipeline (fact extraction with quotes) | Built and unit-tested; not yet run against the live API |
+| 2 | Intake pipeline (fact extraction with quotes) | Done; smoke-tested live on 5 samples |
 | 3 | Tiering engine (deterministic, unit-tested) | Not started |
 | 4 | AI vendor terms review | Not started |
 | 5 | Register, reassessment triggers, decision memo | Not started |
@@ -98,6 +98,29 @@ data" reads). Stage 4 makes the opposite choice for long vendor agreements.
 the API; it opts into server-side refusal fallback so a classifier decline
 is retried on Anthropic's recommended fallback model. Every other piece is
 tested without a network connection (`tests/test_intake.py`).
+
+### Smoke test results (2026-10-10, 5 synthetic samples, about $0.10 total)
+
+This is a smoke test, not an evaluation: five samples written while building,
+one run each. Stage 6 measures accuracy on separate, labeled cases.
+
+| Sample | What happened |
+|---|---|
+| Warranty chatbot | Customer data, live external answers, customer reliance without verification, and unreviewed vendor all found. Over-reached once: inferred "company confidential" from warranty terms, which are usually public. |
+| Email rewrite | Internal data, employee contact info, human-reviewed draft, internal audience found. Vendor terms and regulated domain correctly left unknown. |
+| Legal SharePoint search (trap) | **Caught.** Inferred privileged, third-party confidential, and company confidential from "the entire Legal department SharePoint site". Over-reached once: inferred "relied on for legal purposes without verification" when the description is silent on verification. |
+| "Productivity" resume screener (trap) | **Caught.** Found employment decision and decision about a person despite the "productivity" framing, and inferred that the bottom 80 percent are effectively rejected without human review. Mislabeled applicant data as "customer basic data" because the rubric has no level for job applicants (a rubric gap, not a model error). |
+| "Sales wants to try AI." | All seven dimensions unknown, seven follow-up questions. Fail-closed behavior as designed. |
+
+No quote failed verification in any run. Two patterns to carry into Stage 6:
+inferred findings lean toward over-escalation (the safe direction, but it
+costs friction), and every inferred finding currently produces a
+needs_review note, which is noisy.
+
+Bug found and fixed during the smoke test: the prompt-cache marker covered
+the whole request, so every call paid the cache-write premium and none got
+a cache hit. Moving the marker to the system prompt halved the per-intake
+cost (about $0.015 to $0.007).
 
 ## Setup
 

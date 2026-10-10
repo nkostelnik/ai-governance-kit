@@ -24,3 +24,10 @@ def test_blank_value_is_not_loaded(tmp_path, monkeypatch):
 
 def test_missing_env_file_is_fine(tmp_path):
     load_env_file(tmp_path / "nope.env")
+
+
+def test_cost_counts_cached_tokens():
+    from ai_governance.llm import LLMResult
+    r = LLMResult(parsed=None, stop_reason="end_turn", input_tokens=1000, cache_write_tokens=4000,
+                  cache_read_tokens=0, output_tokens=1000)
+    assert round(r.cost_usd(), 4) == round((1000 + 5000) * 2 / 1e6 + 1000 * 10 / 1e6, 4)
