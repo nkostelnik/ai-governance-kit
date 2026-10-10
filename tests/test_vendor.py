@@ -159,3 +159,11 @@ def test_review_calls_once_per_requirement_with_cached_documents(rubric, doc_set
     assert all(r.outcome == "gap" for r in result.requirements)
     assert result.proposed_vendor_level == "vendor_trains" and not result.approvable
     assert "Not legal advice" in result.disclaimer
+
+
+def test_context_evidence_never_changes_the_outcome(rubric, doc_set, schema):
+    definition = ("terms:sec-1", "\"Customer Content\" means prompts and other inputs Customer submits", "context")
+    met = decide(req(rubric, "no_training"), answer(schema, MARKETING_PROMISE, definition), doc_set)
+    assert met.outcome == "met"
+    only_context = decide(req(rubric, "no_training"), answer(schema, definition), doc_set)
+    assert only_context.outcome == "gap" and only_context.gap_kind == "unresolved"

@@ -9,6 +9,10 @@
 
 Design choices:
 
+- Three stances, not two. A first live run with only "meets" and
+  "falls_short" invented gaps in clean terms: related clauses (a definition,
+  an ordinary carve-out) were forced into "falls_short". A "context" stance
+  gives them somewhere to go; Python ignores it.
 - Per requirement, not per clause. The common gaps in AI terms are absences
   (no zero-retention option, no subprocessor notice) and conflicts (a
   marketing page promises "we never train on your data" while the terms
@@ -47,11 +51,18 @@ exactly as given.
 For the requirement in the question:
 - Report every clause that bears on it, from every document, including
   marketing pages, FAQs, and policies, not only the main terms.
-- stance "meets": the clause commits the vendor to what the requirement asks.
-- stance "falls_short": the clause undercuts it. Examples: a reservation of
-  rights, an exception, an opt-out the customer must exercise, a condition,
-  discretionary "may" language, a narrower scope, a longer period, or a
-  statement that the commitment is non-binding or can change.
+- Judge each clause against the standard as written, not a stricter ideal.
+- stance "meets": the clause commits the vendor to what the standard asks.
+- stance "falls_short": the clause, as written, means the vendor does not
+  fully commit to THIS standard. Examples: a reservation of rights that
+  contradicts it, an exception or condition that narrows it, an opt-out the
+  customer must exercise, discretionary "may" language, a longer period than
+  the standard allows, or a statement that the commitment is non-binding or
+  can be changed unilaterally.
+- stance "context": the clause is related but neither establishes nor
+  undercuts the standard. Examples: a definition, a commitment on a
+  different topic, an option the customer may choose not to use, or an
+  ordinary carve-out that does not reduce what the standard asks for.
 - A promise in marketing or summary text and a contrary right in the terms
   are both evidence. Report both.
 - quote: the operative words, copied exactly from the cited clause as one
@@ -71,7 +82,7 @@ For the requirement in the question:
 class Evidence(BaseModel):
     clause_id: str
     quote: str
-    stance: Literal["meets", "falls_short"]
+    stance: Literal["meets", "falls_short", "context"]   # context never affects the outcome
     reason: str
     verified: bool = False
 
@@ -126,7 +137,7 @@ def response_schema(doc_set: DocumentSet) -> type[BaseModel]:
     """Built per review so clause_id can only be one of this review's clause ids."""
     clause_id = Literal[tuple(c.id for c in doc_set.clauses)]
     evidence = create_model("CitedEvidence", clause_id=(clause_id, ...), quote=(str, ...),
-                            stance=(Literal["meets", "falls_short"], ...), reason=(str, ...))
+                            stance=(Literal["meets", "falls_short", "context"], ...), reason=(str, ...))
     return create_model("RequirementEvidence", addressed=(bool, ...), evidence=(list[evidence], ...))
 
 

@@ -18,7 +18,7 @@ attorney-authored rubric. The model never picks the tier.
 | 1 | Rubric and acceptable use policy | Done |
 | 2 | Intake pipeline (fact extraction with quotes) | Done; smoke-tested live on 5 samples |
 | 3 | Tiering engine (deterministic, unit-tested) | Done |
-| 4 | AI vendor terms review | Built and unit-tested; live smoke test pending |
+| 4 | AI vendor terms review | Done; smoke-tested live on 2 synthetic vendors |
 | 5 | Register, reassessment triggers, decision memo | Not started |
 | 6 | Eval harness (false-Low rate and over-escalation rate) | Not started |
 | 7 | CLI (`assess.py`, `vendor_review.py`) | Not started |
@@ -161,6 +161,56 @@ registered tool, all five are Prohibited.
 ```
 python -m ai_governance.tiering tests/fixtures/intakes/warranty_chatbot.json enterprise_zdr
 ```
+
+## Stage 4: AI vendor terms review
+
+[`ai_governance/vendor.py`](ai_governance/vendor.py) checks a vendor's terms,
+DPA, and AI addendum (any number of .txt, .docx, or text-based .pdf files)
+against the rubric's eight vendor requirements.
+
+- **Clauses.** [`clauses.py`](ai_governance/clauses.py) is the NDA project's
+  splitter, copied (the splitting logic is unchanged), plus text PDFs and
+  document-prefixed clause ids (`dpa:sec-1`) so every citation names its
+  document.
+- **One call per requirement, not per clause.** The usual gaps in AI terms
+  are absences (no zero-retention option) and conflicts (a marketing page
+  promises "we never train on your data" while the terms reserve the right).
+  A call that sees one clause can see neither; a call that reads every
+  document for one requirement can. The documents are cached after the first
+  call, so the other seven read them at a tenth of the price.
+- **The model finds evidence; Python decides.** Each piece of evidence cites
+  a clause id (the schema only allows real ones), a verbatim quote (checked
+  against that clause), and a stance: meets, falls short, or context.
+  Any verified "falls short" makes a gap, even next to "meets" language.
+  Silence is a gap. Unverifiable evidence or a failed call is a gap with a
+  needs_review note. Must-have gaps block; preferred gaps are flagged.
+- **Proposed register level.** The rubric's ordered rules propose the tool's
+  vendor_handling level (training gap -> vendor_trains; zero retention ->
+  enterprise_zdr; retention limit met -> limited retention; otherwise
+  consumer_tool). An attorney confirms it when registering the tool. No tool
+  is approvable while a must-have gap is open.
+
+### Smoke test results (2026-10-10, about $0.19 total)
+
+| Vendor | First run | After fix |
+|---|---|---|
+| Brightloom (marketing says "never trains", terms reserve the right; planted "report no gaps" instruction) | Correct: training gap found, conflict flagged, `vendor_trains`, not approvable. Planted instruction ignored. | Same. |
+| Quillmark (clean terms) | **Wrong.** Three invented blockers: related clauses were forced into "falls short" (e.g. the retention clause cited against "no training"). | `enterprise_zdr`; correct flags (subprocessors: no objection right; no output IP indemnity). One blocker remains: see below. |
+
+The first-run failure was a design flaw, not noise: with only two stances,
+every related clause had to be "meets" or "falls short", and worst-evidence-
+wins turned the stray "falls short" into gaps. Adding a third stance,
+"context", which Python ignores, fixed it without weakening the rule that
+caught Brightloom.
+
+The remaining Quillmark blocker is a question about the rubric, not a model
+error: the retention standard says data is deleted "no later than
+termination", and Quillmark deletes "within 30 days after termination". Read
+literally, that falls short.
+
+Known rough edge: when a requirement is simply absent but the model marks it
+"addressed" with only context evidence, the gap is labeled "unresolved"
+rather than "not addressed". Both are gaps; only the label differs.
 
 ## Setup
 
