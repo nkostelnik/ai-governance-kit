@@ -413,6 +413,28 @@ vendor_requirements:
     standard: We own the AI outputs, or the vendor assigns its rights in them to us.
     severity: must_have
 
+# How a vendor terms review (Stage 4) proposes the register's vendor_handling
+# level. Rules are checked in order; the first match wins; default_level
+# applies if none match. An attorney confirms the level when registering the
+# tool. self_hosted is never proposed: terms cannot establish it.
+vendor_review:
+  level_rules:
+    - if_requirement: no_training
+      outcome: gap
+      propose: vendor_trains
+    - if_requirement: zdr_available
+      outcome: met
+      propose: enterprise_zdr
+    - if_requirement: retention
+      outcome: met
+      propose: enterprise_limited_retention
+  default_level: consumer_tool
+  # A tool may not be listed as approved while any must_have requirement has a gap.
+  approval_blocked_by_must_have_gaps: true
+  notes: >
+    Rules chosen by the rubric owner at Stage 4 design. default_level treats
+    a vendor with no ZDR and no deletion commitment like a consumer tool.
+
 # Laws that may bear on a level. Nothing here is a legal conclusion.
 # status VERIFY = counsel must confirm; status verified requires a citation and a date.
 regulatory_flags:

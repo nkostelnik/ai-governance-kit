@@ -1,0 +1,18 @@
+QUILLMARK LABS ENTERPRISE AI SERVICES AGREEMENT
+SYNTHETIC SAMPLE: fictional vendor, written for testing. Not a real agreement.
+
+1. Definitions. "Customer Content" means all prompts, files, and other inputs Customer submits to the Services, and all outputs the Services generate for Customer ("Outputs").
+
+2. Use of Customer Content. Quillmark processes Customer Content solely to provide the Services to Customer. Quillmark will not use Customer Content to train, retrain, fine-tune, or otherwise improve any machine learning model, whether Quillmark's or a third party's.
+
+3. Ownership of Outputs. As between the parties, Customer owns all right, title, and interest in and to the Outputs. To the extent Quillmark has any rights in the Outputs, Quillmark hereby assigns them to Customer.
+
+4. Confidentiality. Customer Content is Customer's Confidential Information. Quillmark will protect Confidential Information with at least the care it uses for its own confidential information, and no less than reasonable care, and will not disclose it except to subprocessors bound by written obligations at least as protective as this Section.
+
+5. Data Retention. Customer may enable Zero Data Retention for any workspace, in which case Quillmark will not store prompts or Outputs after the response is returned. For workspaces without Zero Data Retention, Quillmark retains Customer Content for up to 30 days for abuse monitoring and then deletes it. In all cases Quillmark will delete all Customer Content within 30 days after termination of this Agreement.
+
+6. Security. Quillmark maintains a SOC 2 Type II report, provided to Customer annually on request. Quillmark will notify Customer without undue delay, and in any event within 72 hours, after becoming aware of a security breach affecting Customer Content.
+
+7. Indemnification. Each party will indemnify the other against third-party claims arising from its breach of Section 4.
+
+8. Governing Law. This Agreement is governed by the laws of the State of Delaware.

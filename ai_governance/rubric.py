@@ -205,6 +205,19 @@ class VendorRequirement(Strict):
     notes: str | None = None
 
 
+class LevelRule(Strict):
+    if_requirement: str
+    outcome: Literal["met", "gap"]
+    propose: str
+
+
+class VendorReview(Strict):
+    level_rules: list[LevelRule]
+    default_level: str
+    approval_blocked_by_must_have_gaps: bool
+    notes: str | None = None
+
+
 class RegulatoryFlag(Strict):
     id: str
     topic: str
@@ -234,6 +247,7 @@ class Rubric(Strict):
     approvers: Approvers
     review: Review
     vendor_requirements: list[VendorRequirement]
+    vendor_review: VendorReview
     regulatory_flags: list[RegulatoryFlag]
 
     @model_validator(mode="after")
@@ -255,6 +269,14 @@ class Rubric(Strict):
         for level_id in [*self.approved_tool.vendor_handling_levels, self.approved_tool.unregistered_level]:
             if not self._has_level("vendor_handling", level_id):
                 raise ValueError(f"approved_tool points at unknown level 'vendor_handling.{level_id}'")
+
+        requirement_ids = {r.id for r in self.vendor_requirements}
+        for rule in self.vendor_review.level_rules:
+            if rule.if_requirement not in requirement_ids:
+                raise ValueError(f"vendor_review rule names unknown requirement {rule.if_requirement!r}")
+        for level_id in [*(r.propose for r in self.vendor_review.level_rules), self.vendor_review.default_level]:
+            if not self._has_level("vendor_handling", level_id):
+                raise ValueError(f"vendor_review proposes unknown level 'vendor_handling.{level_id}'")
 
         refs = [(f"flag {f.id!r}", ref) for f in self.regulatory_flags for ref in f.applies_to]
         refs += [(f"triggered control {t.control!r}", ref) for t in self.controls.triggered for ref in t.triggered_by]

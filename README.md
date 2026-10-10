@@ -18,7 +18,7 @@ attorney-authored rubric. The model never picks the tier.
 | 1 | Rubric and acceptable use policy | Done |
 | 2 | Intake pipeline (fact extraction with quotes) | Done; smoke-tested live on 5 samples |
 | 3 | Tiering engine (deterministic, unit-tested) | Done |
-| 4 | AI vendor terms review | Not started |
+| 4 | AI vendor terms review | Built and unit-tested; live smoke test pending |
 | 5 | Register, reassessment triggers, decision memo | Not started |
 | 6 | Eval harness (false-Low rate and over-escalation rate) | Not started |
 | 7 | CLI (`assess.py`, `vendor_review.py`) | Not started |

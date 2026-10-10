@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import TypeVar
 
 import anthropic
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 MODEL = "claude-sonnet-5-5"
 
@@ -52,24 +52,20 @@ class LLMResult(BaseModel):
         return (billed_input * input_per_m + self.output_tokens * output_per_m) / 1e6
 
 
-def parse(system: str, user: str, output_format: type[T], effort: str = "medium") -> LLMResult:
+def parse(system: str, user: str, output_format: type[T], effort: str = "medium",
+          cached_context: str | None = None) -> LLMResult:
+    """One structured-output call. `cached_context` (e.g. a vendor's documents)
+    goes before `user` and is cached, so repeated calls over the same
+    documents with different questions read it from cache."""
     load_env_file()
     client = anthropic.Anthropic()
-    response = client.beta.messages.parse(
-        model=MODEL,
-        max_tokens=16000,
-        # Cache the system prompt (identical across calls). The marker goes on
-        # the system block, not the whole request: the user message differs
-        # every call, so caching through it would never produce a cache hit.
-        system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
-        messages=[{"role": "user", "content": user}],
-        output_format=output_format,
-        output_config={"effort": effort},
-        # If a safety classifier declines, retry server-side on Anthropic's
-        # recommended fallback model instead of failing outright.
-        betas=["server-side-fallback-2026-07-01"],
-        fallbacks="default",
-    )
+    content = [{"type": "text", "text": user}]
+    if cached_context:
+        content.insert(0, {"type": "text", "text": cached_context, "cache_control": {"type": "ephemeral"}})
+    try:
+        response = _call(client, system, content, output_format, effort)
+    except ValidationError:   # the response did not fit the schema: fail closed
+        return LLMResult(parsed=None, stop_reason="invalid_output")
     usable = response.stop_reason not in ("refusal", "max_tokens")
     return LLMResult(
         parsed=response.parsed_output if usable else None,
@@ -78,4 +74,22 @@ def parse(system: str, user: str, output_format: type[T], effort: str = "medium"
         cache_write_tokens=response.usage.cache_creation_input_tokens or 0,
         cache_read_tokens=response.usage.cache_read_input_tokens or 0,
         output_tokens=response.usage.output_tokens,
+    )
+
+
+def _call(client, system, content, output_format, effort):
+    return client.beta.messages.parse(
+        model=MODEL,
+        max_tokens=16000,
+        # Cache the system prompt (identical across calls). The marker goes on
+        # the system block, not the whole request: the user message differs
+        # every call, so caching through it would never produce a cache hit.
+        system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
+        messages=[{"role": "user", "content": content}],
+        output_format=output_format,
+        output_config={"effort": effort},
+        # If a safety classifier declines, retry server-side on Anthropic's
+        # recommended fallback model instead of failing outright.
+        betas=["server-side-fallback-2026-07-01"],
+        fallbacks="default",
     )

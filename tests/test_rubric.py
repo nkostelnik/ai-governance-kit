@@ -138,3 +138,28 @@ def test_triggered_control_pointing_at_missing_level_is_rejected(raw):
     bad["controls"]["triggered"][0]["triggered_by"] = ["audience.no_such_level"]
     with pytest.raises(ValidationError, match="unknown level"):
         Rubric.model_validate(bad)
+
+
+def test_vendor_level_rules_load_in_order():
+    review = load_rubric().vendor_review
+    assert [(r.if_requirement, r.outcome, r.propose) for r in review.level_rules] == [
+        ("no_training", "gap", "vendor_trains"),
+        ("zdr_available", "met", "enterprise_zdr"),
+        ("retention", "met", "enterprise_limited_retention"),
+    ]
+    assert review.default_level == "consumer_tool"
+    assert review.approval_blocked_by_must_have_gaps
+
+
+def test_vendor_rule_with_unknown_requirement_is_rejected(raw):
+    bad = copy.deepcopy(raw)
+    bad["vendor_review"]["level_rules"][0]["if_requirement"] = "good_vibes"
+    with pytest.raises(ValidationError, match="unknown requirement"):
+        Rubric.model_validate(bad)
+
+
+def test_vendor_rule_proposing_unknown_level_is_rejected(raw):
+    bad = copy.deepcopy(raw)
+    bad["vendor_review"]["default_level"] = "trust_me"
+    with pytest.raises(ValidationError, match="unknown level"):
+        Rubric.model_validate(bad)
