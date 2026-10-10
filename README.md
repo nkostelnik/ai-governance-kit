@@ -17,7 +17,7 @@ attorney-authored rubric. The model never picks the tier.
 |---|---|---|
 | 1 | Rubric and acceptable use policy | Done |
 | 2 | Intake pipeline (fact extraction with quotes) | Done; smoke-tested live on 5 samples |
-| 3 | Tiering engine (deterministic, unit-tested) | Not started |
+| 3 | Tiering engine (deterministic, unit-tested) | Done |
 | 4 | AI vendor terms review | Not started |
 | 5 | Register, reassessment triggers, decision memo | Not started |
 | 6 | Eval harness (false-Low rate and over-escalation rate) | Not started |
@@ -121,6 +121,46 @@ Bug found and fixed during the smoke test: the prompt-cache marker covered
 the whole request, so every call paid the cache-write premium and none got
 a cache hit. Moving the marker to the system prompt halved the per-intake
 cost (about $0.015 to $0.007).
+
+## Stage 3: tiering engine
+
+[`ai_governance/tiering.py`](ai_governance/tiering.py) applies the rubric to
+verified facts. There is no model in this step: the same facts always produce
+the same tier, and every rule is unit-tested (`tests/test_tiering.py`).
+
+- **Per dimension:** the worst level found sets the dimension's tier. Levels
+  that are "Prohibited, but High in an approved tool" use the lower tier only
+  when the tool is approved.
+- **Unknown dimensions** are rated Medium and the result is marked
+  *provisional*: it cannot be finalized until the follow-up questions are
+  answered (`answer_follow_ups` in `intake.py`; answers can add risk, never
+  remove it).
+- **Overall:** worst dimension wins; three or more Medium dimensions stack to
+  High; stacking never produces Prohibited.
+- **Output:** the tier, the reason for it (with the supporting quote), the
+  cumulative controls and approvers, situation-triggered controls (bias
+  testing, bot disclosure), the review cadence, and any regulatory flags,
+  still marked VERIFY. A Prohibited result lists the exception path instead.
+
+**Vendor handling is looked up, not extracted.** The vendor dimension comes
+from the tool's register record (the result of a vendor terms review), never
+from the requester's description. A tool with no record is treated as
+"vendor terms not yet reviewed", which the rubric rates Prohibited. Two
+reasons: a requester should not be able to lower risk by asserting "we have
+a zero-retention contract", and the smoke test showed the model treating the
+same situation (an unreviewed tool) inconsistently. Facts the company already
+knows are looked up; only facts about the proposed use are extracted.
+
+The five smoke-test intakes are saved in `tests/fixtures/intakes/` and run
+through the engine as end-to-end tests at no cost. In an approved
+zero-retention tool they land at: email rewrite Medium (provisional),
+warranty chatbot High, Legal SharePoint search Prohibited, resume screener
+Prohibited, "Sales wants to try AI" High (six unknowns stack). Without a
+registered tool, all five are Prohibited.
+
+```
+python -m ai_governance.tiering tests/fixtures/intakes/warranty_chatbot.json enterprise_zdr
+```
 
 ## Setup
 

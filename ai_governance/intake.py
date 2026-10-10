@@ -28,7 +28,9 @@ from .rubric import Rubric, load_rubric
 class Finding(BaseModel):
     level_id: str
     quote: str
-    basis: Literal["stated", "inferred"]
+    # "answered" is set only by Python when a requester answers a follow-up;
+    # verify() rejects it if the model ever returns it.
+    basis: Literal["stated", "inferred", "answered"]
 
 
 class DimensionAnswer(BaseModel):
@@ -197,8 +199,14 @@ def verify(description: str, raw: RawExtraction | None, rubric: Rubric, why_empt
         for f in answer.findings:
             if f.level_id not in {lv.id for lv in dim.levels}:
                 reason = "level not in rubric"
+            elif f.basis == "answered":
+                reason = "model may not mark a finding as a requester answer"
             elif not quote_found(f.quote, description):
                 reason = "quote not found in description"
+            elif dim.source == "register":
+                # Recorded for the reviewer, never used for rating (Stage 3 reads the register).
+                needs_review.append(f"{dim.id}: description says \"{f.quote}\"; not used, this dimension is rated from the tool register.")
+                continue
             else:
                 kept = answers.setdefault(dim.id, [])
                 if f.level_id not in {k.level_id for k in kept}:
@@ -218,7 +226,7 @@ def verify(description: str, raw: RawExtraction | None, rubric: Rubric, why_empt
             setattr(profile, name, ProfileField(value=None, quote=None))
             needs_review.append(f"profile.{name} dropped: its quote was not found in the description.")
 
-    unknown = [d.id for d in rubric.dimensions if d.id not in answers]
+    unknown = [d.id for d in rubric.dimensions if d.source == "intake" and d.id not in answers]
     return IntakeResult(
         description=description,
         profile=profile,
@@ -228,6 +236,25 @@ def verify(description: str, raw: RawExtraction | None, rubric: Rubric, why_empt
         rejected=rejected,
         follow_ups=[follow_up_for(rubric, d) for d in unknown],
     )
+
+
+def answer_follow_ups(intake: IntakeResult, answers: dict[str, list[str]], rubric: Rubric) -> IntakeResult:
+    """Record a requester's button answers as findings. Answers can add levels, never remove them."""
+    result = intake.model_copy(deep=True)
+    for dimension_id, level_ids in answers.items():
+        dim = rubric.dimension(dimension_id)
+        if dim.source != "intake":
+            raise ValueError(f"{dimension_id} is rated from the register, not from requester answers")
+        if not level_ids:
+            raise ValueError(f"no answer given for {dimension_id}")
+        kept = result.answers.setdefault(dimension_id, [])
+        for level_id in level_ids:
+            level = dim.level(level_id)   # KeyError for an unknown level
+            if level_id not in {k.level_id for k in kept}:
+                kept.append(Finding(level_id=level_id, quote=f"Requester answer: {level.description.strip()}", basis="answered"))
+    result.unknown_dimensions = [d for d in result.unknown_dimensions if d not in answers]
+    result.follow_ups = [fu for fu in result.follow_ups if fu.dimension_id not in answers]
+    return result
 
 
 # ---------------------------------------------------------------------------

@@ -60,6 +60,8 @@ unknowns:
 approved_tool:
   vendor_handling_levels: [self_hosted, enterprise_zdr, enterprise_limited_retention]
   requires_register_listing: true
+  # A tool with no register record is treated as this vendor_handling level.
+  unregistered_level: vendor_unknown
   notes: >
     Interview answer was Strict (self-hosted or ZDR only). Recalibrated to
     Standard (also allows limited retention) after a review showed Strict
@@ -237,6 +239,10 @@ dimensions:
   - id: vendor_handling
     name: Vendor data handling
     description: What the tool's provider does with our inputs and outputs.
+    # Rated from the tool's register record (vendor terms review), never from
+    # the intake description: a requester cannot lower risk by asserting
+    # contract terms. A tool not in the register is unregistered_level.
+    source: register
     levels:
       - id: self_hosted
         description: Self-hosted or private-cloud model; our data never leaves our environment.
@@ -256,6 +262,9 @@ dimensions:
       - id: vendor_unknown
         description: Vendor terms not yet reviewed.
         tier: Prohibited
+        notes: >
+          Also applied to any tool with no register record (approved_tool.unregistered_level).
+          Decided at Stage 3 design: vendor handling comes from the register only.
 
   - id: accuracy_criticality
     name: Accuracy criticality

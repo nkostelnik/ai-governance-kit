@@ -9,6 +9,7 @@ from ai_governance.intake import (
     Profile,
     ProfileField,
     RawExtraction,
+    answer_follow_ups,
     build_system_prompt,
     normalize,
     quote_found,
@@ -87,11 +88,51 @@ def test_invented_dimension_is_rejected(rubric):
     assert result.rejected[0].reason == "dimension not in rubric"
 
 
+def intake_dims(rubric):
+    return [d.id for d in rubric.dimensions if d.source == "intake"]
+
+
 def test_missing_dimensions_become_unknown_with_rubric_follow_ups(rubric):
     result = verify(DESCRIPTION, raw(answer("audience", stated("external_direct", "real time"))), rubric)
-    assert len(result.unknown_dimensions) == len(rubric.dimensions) - 1
-    follow_up = next(fu for fu in result.follow_ups if fu.dimension_id == "vendor_handling")
-    assert [o.level_id for o in follow_up.options] == [lv.id for lv in rubric.dimension("vendor_handling").levels]
+    assert len(result.unknown_dimensions) == len(intake_dims(rubric)) - 1
+    follow_up = next(fu for fu in result.follow_ups if fu.dimension_id == "personal_data")
+    assert [o.level_id for o in follow_up.options] == [lv.id for lv in rubric.dimension("personal_data").levels]
+
+
+def test_register_dimension_is_never_unknown_or_asked(rubric):
+    result = verify(DESCRIPTION, raw(), rubric)
+    assert "vendor_handling" not in result.unknown_dimensions
+    assert all(fu.dimension_id != "vendor_handling" for fu in result.follow_ups)
+
+
+def test_description_cannot_set_register_dimension(rubric):
+    result = verify(DESCRIPTION, raw(answer("vendor_handling", stated("enterprise_zdr", "Business owner is Dana Reyes"))), rubric)
+    assert "vendor_handling" not in result.answers
+    assert any("rated from the tool register" in note for note in result.needs_review)
+
+
+def test_model_cannot_claim_a_requester_answer(rubric):
+    fake = Finding(level_id="external_direct", quote="real time", basis="answered")
+    result = verify(DESCRIPTION, raw(answer("audience", fake)), rubric)
+    assert "audience" not in result.answers
+    assert "requester answer" in result.rejected[0].reason
+
+
+def test_follow_up_answers_close_questions_and_only_add(rubric):
+    intake = verify(DESCRIPTION, raw(answer("audience", stated("external_direct", "real time"))), rubric)
+    answered = answer_follow_ups(intake, {"personal_data": ["customer_basic"], "audience": ["personal_use"]}, rubric)
+    assert "personal_data" not in answered.unknown_dimensions
+    assert all(fu.dimension_id != "personal_data" for fu in answered.follow_ups)
+    assert answered.answers["personal_data"][0].basis == "answered"
+    assert {f.level_id for f in answered.answers["audience"]} == {"external_direct", "personal_use"}
+
+
+def test_follow_up_answers_are_validated(rubric):
+    intake = verify(DESCRIPTION, raw(), rubric)
+    with pytest.raises(KeyError):
+        answer_follow_ups(intake, {"personal_data": ["no_such_level"]}, rubric)
+    with pytest.raises(ValueError, match="register"):
+        answer_follow_ups(intake, {"vendor_handling": ["enterprise_zdr"]}, rubric)
 
 
 def test_all_supported_levels_are_kept_not_just_the_worst(rubric):
@@ -128,7 +169,7 @@ def test_profile_value_with_bad_quote_is_dropped(rubric):
 def test_no_usable_response_means_everything_unknown(rubric):
     result = verify(DESCRIPTION, None, rubric, why_empty="stop_reason=refusal")
     assert result.answers == {}
-    assert len(result.unknown_dimensions) == len(rubric.dimensions)
+    assert len(result.unknown_dimensions) == len(intake_dims(rubric))
     assert "refusal" in result.needs_review[0]
 
 
@@ -163,4 +204,4 @@ def test_run_intake_refusal_fails_closed(rubric):
         return llm.LLMResult(parsed=None, stop_reason="refusal")
 
     result = run_intake(DESCRIPTION, rubric, call=refusing_call)
-    assert len(result.unknown_dimensions) == len(rubric.dimensions)
+    assert len(result.unknown_dimensions) == len(intake_dims(rubric))

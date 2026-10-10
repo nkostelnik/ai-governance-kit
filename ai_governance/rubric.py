@@ -60,6 +60,7 @@ class Dimension(Strict):
     id: str
     name: str
     description: str
+    source: Literal["intake", "register"] = "intake"   # where the facts come from
     levels: list[Level]
     notes: str | None = None
 
@@ -115,6 +116,7 @@ class Unknowns(Strict):
 class ApprovedTool(Strict):
     vendor_handling_levels: list[str]
     requires_register_listing: bool
+    unregistered_level: str
     notes: str | None = None
 
 
@@ -250,7 +252,7 @@ class Rubric(Strict):
 
         # Pydantic only reports ValueErrors, so lookups that raise KeyError are
         # converted here into readable validation messages.
-        for level_id in self.approved_tool.vendor_handling_levels:
+        for level_id in [*self.approved_tool.vendor_handling_levels, self.approved_tool.unregistered_level]:
             if not self._has_level("vendor_handling", level_id):
                 raise ValueError(f"approved_tool points at unknown level 'vendor_handling.{level_id}'")
 
