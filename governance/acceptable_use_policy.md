@@ -60,6 +60,8 @@ These are allowed **only in an approved tool**, after the use case is assessed:
   VERIFY: [citation needed] (whether use in a third-party AI tool affects
   privilege or work product protection).
 - Customer or consumer basic data (High tier)
+- Job applicant data such as resumes and interview notes (High tier). Using AI
+  to evaluate, score, or rank candidates remains prohibited (section 5).
 - Employee business contact information (Low tier)
 
 ## 5. Prohibited uses

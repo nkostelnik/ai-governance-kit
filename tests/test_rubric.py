@@ -43,6 +43,7 @@ def test_calibration_changes_survive_loading():
     assert rubric.dimension("accuracy_criticality").level("customer_reliance_verified").tier == Tier.Medium
     assert rubric.dimension("accuracy_criticality").level("critical_reliance_verified").tier == Tier.Medium
     assert "enterprise_limited_retention" in rubric.approved_tool.vendor_handling_levels
+    assert rubric.dimension("personal_data").level("job_applicant").tier_if_approved_tool == Tier.High
 
 
 def test_controls_and_approvers_are_cumulative():

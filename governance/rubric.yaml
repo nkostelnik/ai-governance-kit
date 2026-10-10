@@ -135,6 +135,15 @@ dimensions:
         description: Customer or consumer basic data (name, contact, order or account history).
         tier: Prohibited
         tier_if_approved_tool: High
+      - id: job_applicant
+        description: Job applicant data (resumes, cover letters, interview notes, candidate correspondence).
+        tier: Prohibited
+        tier_if_approved_tool: High
+        notes: >
+          Added after the Stage 2 smoke test, where a resume screener's
+          applicant data had no matching level and was labeled customer_basic.
+          Tier chosen by the rubric owner to match customer_basic. AI-assisted
+          employment decisions stay Prohibited under regulated_domain.
       - id: employee_hr
         description: Employee HR records (performance, compensation, discipline).
         tier: Prohibited
