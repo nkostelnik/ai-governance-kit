@@ -206,7 +206,8 @@ caught Brightloom.
 The remaining Quillmark blocker is a question about the rubric, not a model
 error: the retention standard says data is deleted "no later than
 termination", and Quillmark deletes "within 30 days after termination". Read
-literally, that falls short.
+literally, that falls short. The rubric owner confirmed the standard as written,
+so Quillmark is correctly blocked until that term is negotiated.
 
 Known rough edge: when a requirement is simply absent but the model marks it
 "addressed" with only context evidence, the gap is labeled "unresolved"

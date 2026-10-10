@@ -391,6 +391,10 @@ vendor_requirements:
     name: Retention limit
     standard: Where ZDR is not used, our inputs and outputs are deleted no later than termination.
     severity: must_have
+    notes: >
+      Confirmed as written after the Stage 4 smoke test, knowing it blocks
+      vendors that delete "within 30 days after termination" (a common
+      post-termination cleanup window). Deliberately strict; negotiate per deal.
   - id: subprocessors
     name: Subprocessors
     standard: Subprocessor list disclosed, advance notice of changes, and a right to object.
