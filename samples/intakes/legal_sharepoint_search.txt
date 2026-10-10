@@ -1,0 +1,1 @@
+The legal operations team would like an AI assistant that can search across the entire Legal department SharePoint site and answer questions like "what did we agree to in the Acme deal?" or "summarize our position on the pending dispute." It would just be used internally by the legal team to save time finding documents.

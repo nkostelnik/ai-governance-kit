@@ -1,0 +1,1 @@
+HR is piloting a productivity tool that reads incoming resumes and cover letters, scores each applicant from 1 to 10 for fit with the job description, and sorts the list so recruiters only look at the top 20 percent. Recruiters still make the final call on who gets an interview. It's really just a productivity booster for a busy team.
