@@ -27,8 +27,11 @@ def load_env_file(path: Path = ENV_FILE) -> None:
         return
     for line in path.read_text(encoding="utf-8").splitlines():
         key, sep, value = line.strip().partition("=")
-        if sep and key and not key.startswith("#"):
-            os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+        value = value.strip().strip('"').strip("'")
+        # Skip blank values: an empty ANTHROPIC_API_KEY would still take
+        # precedence over an `ant auth login` profile and fail authentication.
+        if sep and key and value and not key.startswith("#"):
+            os.environ.setdefault(key.strip(), value)
 
 T = TypeVar("T", bound=BaseModel)
 

@@ -14,5 +14,13 @@ def test_env_file_is_read_without_overriding_real_env(tmp_path, monkeypatch):
     monkeypatch.delenv("AIGOV_TEST_A")
 
 
+def test_blank_value_is_not_loaded(tmp_path, monkeypatch):
+    env = tmp_path / ".env"
+    env.write_text("AIGOV_TEST_C=\n", encoding="utf-8")
+    monkeypatch.delenv("AIGOV_TEST_C", raising=False)
+    load_env_file(env)
+    assert "AIGOV_TEST_C" not in os.environ
+
+
 def test_missing_env_file_is_fine(tmp_path):
     load_env_file(tmp_path / "nope.env")
