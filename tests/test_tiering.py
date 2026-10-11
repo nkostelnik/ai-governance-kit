@@ -1,12 +1,14 @@
 """Stage 3 tests. Pure Python: no API, no network."""
 
+import copy
 import json
 from pathlib import Path
 
 import pytest
+import yaml
 
 from ai_governance.intake import Finding, IntakeResult, Profile, ProfileField
-from ai_governance.rubric import Tier, load_rubric
+from ai_governance.rubric import DEFAULT_RUBRIC, Rubric, Tier, load_rubric
 from ai_governance.tiering import ToolRecord, assess, is_approved_tool
 
 FIXTURES = Path(__file__).parent / "fixtures" / "intakes"
@@ -41,6 +43,24 @@ ALL_LOW = {
 
 def with_(**changes):
     return {**ALL_LOW, **changes}
+
+
+def rubric_with(tiers: dict[str, str] | None = None, count_unknowns: bool | None = None) -> Rubric:
+    """A copy of the real rubric with some level tiers changed, to test rules the
+    current rubric cannot reach (after the Stage 6 recalibration, stacking cannot
+    fire on real facts)."""
+    raw = copy.deepcopy(yaml.safe_load(DEFAULT_RUBRIC.read_text(encoding="utf-8")))
+    for dim in raw["dimensions"]:
+        for level in dim["levels"]:
+            if level["id"] in (tiers or {}):
+                level["tier"] = tiers[level["id"]]
+    if count_unknowns is not None:
+        raw["aggregation"]["stacking"]["count_unknowns"] = count_unknowns
+    return Rubric.model_validate(raw)
+
+
+STACKABLE = rubric_with({"external_reviewed": "Medium", "domain_not_individual": "Medium",
+                         "customer_reliance_verified": "Medium"})
 
 
 def load_fixture(name) -> IntakeResult:
@@ -79,7 +99,7 @@ def test_approved_tool_exception_switches_tier(rubric):
 
 
 def test_absolute_prohibition_ignores_approved_tool(rubric):
-    result = assess(intake(with_(data_sensitivity=["trade_secrets"])), tool=ZDR_TOOL, rubric=rubric)
+    result = assess(intake(with_(data_sensitivity=["security_secrets"])), tool=ZDR_TOOL, rubric=rubric)
     assert result.tier == Tier.Prohibited
     assert result.controls == [] and result.approvers == []
     assert "general_counsel" in result.prohibited_exception
@@ -88,31 +108,37 @@ def test_absolute_prohibition_ignores_approved_tool(rubric):
 # --- aggregation -------------------------------------------------------------
 
 def test_worst_level_in_a_dimension_wins(rubric):
-    result = assess(intake(with_(personal_data=["employee_contact", "customer_basic"])), tool=ZDR_TOOL, rubric=rubric)
+    result = assess(intake(with_(personal_data=["customer_basic", "job_applicant"])), tool=ZDR_TOOL, rubric=rubric)
     rating = next(r for r in result.ratings if r.dimension_id == "personal_data")
-    assert rating.tier == Tier.High and rating.driver_level == "customer_basic"
+    assert rating.tier == Tier.High and rating.driver_level == "job_applicant"
 
 
-def test_two_mediums_stay_medium(rubric):
+def test_two_mediums_stay_medium():
     facts = intake(with_(audience=["external_reviewed"], regulated_domain=["domain_not_individual"]))
-    result = assess(facts, tool=ZDR_TOOL, rubric=rubric)
+    result = assess(facts, tool=ZDR_TOOL, rubric=STACKABLE)
     assert result.tier == Tier.Medium and not result.stacking_applied
 
 
-def test_three_mediums_stack_to_high(rubric):
+def test_three_mediums_stack_to_high():
     facts = intake(with_(audience=["external_reviewed"], regulated_domain=["domain_not_individual"],
                          accuracy_criticality=["customer_reliance_verified"]))
-    result = assess(facts, tool=ZDR_TOOL, rubric=rubric)
+    result = assess(facts, tool=ZDR_TOOL, rubric=STACKABLE)
     assert result.tier == Tier.High and result.stacking_applied
     assert "stacking" in result.reasons[0]
 
 
-def test_stacking_does_not_lower_or_exceed(rubric):
+def test_stacking_does_not_lower_or_exceed():
     facts = intake(with_(audience=["external_reviewed"], regulated_domain=["domain_not_individual"],
                          accuracy_criticality=["customer_reliance_verified"],
                          decision_impact=["person_decision_automated"]))
-    result = assess(facts, tool=ZDR_TOOL, rubric=rubric)
+    result = assess(facts, tool=ZDR_TOOL, rubric=STACKABLE)
     assert result.tier == Tier.Prohibited and not result.stacking_applied
+
+
+def test_stacking_cannot_fire_on_the_current_rubric(rubric):
+    """Documents a Stage 6 consequence: no three real levels are Medium any more."""
+    mediums = [lv.id for d in rubric.dimensions if d.source == "intake" for lv in d.levels if lv.tier == Tier.Medium]
+    assert mediums == ["critical_reliance_verified"]
 
 
 def test_unknown_dimensions_are_medium_and_provisional(rubric):
@@ -123,9 +149,14 @@ def test_unknown_dimensions_are_medium_and_provisional(rubric):
     assert any("personal_data is unknown" in n for n in result.needs_review)
 
 
-def test_everything_unknown_stacks_to_high_not_low(rubric):
+def test_everything_unknown_is_medium_and_provisional_never_low(rubric):
     result = assess(intake({}), tool=ZDR_TOOL, rubric=rubric)
-    assert result.tier == Tier.High and result.stacking_applied and result.provisional
+    assert result.tier == Tier.Medium and not result.stacking_applied and result.provisional
+
+
+def test_unknowns_stack_when_the_rubric_says_so():
+    result = assess(intake({}), tool=ZDR_TOOL, rubric=rubric_with(count_unknowns=True))
+    assert result.tier == Tier.High and result.stacking_applied
 
 
 # --- controls, approvers, flags ----------------------------------------------
@@ -159,9 +190,9 @@ def test_result_carries_disclaimer_and_is_deterministic(rubric):
 @pytest.mark.parametrize("name, expected, provisional", [
     ("email_rewrite", Tier.Medium, True),               # regulated_domain unknown
     ("warranty_chatbot", Tier.High, True),
-    ("legal_sharepoint_search", Tier.Prohibited, True),  # critical reliance, unverified (inferred)
+    ("legal_sharepoint_search", Tier.High, True),        # privileged in an approved tool
     ("productivity_screener", Tier.Prohibited, False),   # employment decision
-    ("vague", Tier.High, True),                          # six unknowns stack
+    ("vague", Tier.Medium, True),                        # unknowns are Medium and no longer stack
 ])
 def test_smoke_test_intakes_in_an_approved_tool(rubric, name, expected, provisional):
     result = assess(load_fixture(name), tool=ZDR_TOOL, rubric=rubric)

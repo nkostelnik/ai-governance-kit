@@ -94,12 +94,17 @@ cases:
       bot answers directly from the benefits handbook.
     facts:
       data_sensitivity: [internal]
-      personal_data: [health, employee_hr]
+      personal_data: [health]
       decision_impact: [automated_action]
       regulated_domain: [no_regulated_domain]
       audience: [internal_shared]
       accuracy_criticality: [errors_moderate]
     trap: Sounds like a policy FAQ; employees will volunteer health information.
+    key_correction: >
+      2026-10-10, after the baseline run: removed employee_hr from the fact key.
+      The rubric defines employee_hr as performance, compensation, and discipline
+      records; benefits and leave questions are not that. The error was in the
+      key, not the model (the model found health information every run).
 
   - id: UC07
     title: Sales emails from CRM

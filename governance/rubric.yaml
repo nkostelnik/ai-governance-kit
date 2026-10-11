@@ -43,6 +43,11 @@ aggregation:
     min_count: 3        # three or more dimensions rated...
     at_tier: Medium     # ...Medium...
     raises_to: High     # ...raise the overall tier to High.
+    count_unknowns: false   # unknown dimensions do not count toward stacking
+  # Stage 6 recalibration: unknowns no longer stack. With that and the other
+  # recalibrations, the only Medium levels left are critical_reliance_verified
+  # and enterprise_limited_retention, so stacking cannot fire on real facts
+  # today. It is kept, and tested, in case Medium levels are added later.
   # Stacking never produces Prohibited. Prohibited comes only from a level
   # rated Prohibited.
 
@@ -91,8 +96,10 @@ dimensions:
       - id: third_party_confidential
         description: Third-party confidential information held under NDA or contract (customer or partner information).
         tier: Prohibited
-        tier_if_approved_tool: High
-        notes: Interview answer was absolute; recalibrated to High in an approved tool.
+        tier_if_approved_tool: Low
+        notes: >
+          Interview answer was absolute; recalibrated to High in an approved tool.
+          Stage 6 recalibration (owner's blind eval labels): High -> Low in an approved tool.
       - id: privileged
         description: Privileged communications or attorney work product.
         tier: Prohibited
@@ -104,18 +111,23 @@ dimensions:
       - id: trade_secrets
         description: Trade secrets or proprietary source code.
         tier: Prohibited
+        tier_if_approved_tool: High
+        notes: "Stage 6 recalibration (owner's blind eval labels): absolute -> High in an approved tool."
       - id: security_secrets
         description: Credentials, secrets, or security configurations (passwords, API keys, network diagrams).
         tier: Prohibited
       - id: mnpi
         description: Material non-public information (for example, deal information before announcement).
         tier: Prohibited
+        tier_if_approved_tool: High
+        notes: "Stage 6 recalibration (owner's blind eval labels): absolute -> High in an approved tool."
     notes: >
       The six Prohibited categories were first answered "Prohibited", then
       confirmed row by row (company_confidential conditional, the other five
       absolute). On a later calibration review, third_party_confidential and
-      privileged were also made conditional. trade_secrets, security_secrets,
-      and mnpi remain absolute.
+      privileged were also made conditional. After the Stage 6 evals,
+      trade_secrets and mnpi were also made conditional; security_secrets
+      remains absolute.
 
   - id: personal_data
     name: Personal data
@@ -136,7 +148,8 @@ dimensions:
       - id: customer_basic
         description: Customer or consumer basic data (name, contact, order or account history).
         tier: Prohibited
-        tier_if_approved_tool: High
+        tier_if_approved_tool: Low
+        notes: "Stage 6 recalibration (owner's blind eval labels): High -> Low in an approved tool."
       - id: job_applicant
         description: Job applicant data (resumes, cover letters, interview notes, candidate correspondence).
         tier: Prohibited
@@ -155,12 +168,16 @@ dimensions:
       - id: health
         description: Health or medical information.
         tier: Prohibited
+        tier_if_approved_tool: High
+        notes: "Stage 6 recalibration (owner's blind eval labels): absolute -> High in an approved tool."
       - id: biometric
         description: Biometric data (face geometry, voiceprints, fingerprints).
         tier: Prohibited
       - id: minors
         description: Data about minors (under 18).
         tier: Prohibited
+        tier_if_approved_tool: High
+        notes: "Stage 6 recalibration (owner's blind eval labels): absolute -> High in an approved tool."
       - id: other_sensitive
         description: Other sensitive categories (race, religion, sexual orientation, precise geolocation, immigration status).
         tier: Prohibited
@@ -195,8 +212,10 @@ dimensions:
         notes: Structural default (not an interview answer).
       - id: domain_not_individual
         description: Work in a listed domain that is not about specific people (drafting a job posting, summarizing a lending regulation).
-        tier: Medium
-        notes: First answered High; changed to Medium on follow-up.
+        tier: Low
+        notes: >
+          First answered High; changed to Medium on follow-up.
+          Stage 6 recalibration (owner's blind eval labels): Medium -> Low.
       - id: employment_decision
         description: AI-assisted employment decisions (screening, hiring, promotion, discipline, termination), even with a human final call.
         tier: Prohibited
@@ -214,7 +233,8 @@ dimensions:
         tier: Prohibited
       - id: minors_education
         description: Education or services directed at minors.
-        tier: Prohibited
+        tier: High
+        notes: "Stage 6 recalibration (owner's blind eval labels): Prohibited -> High."
       - id: legal_services_external
         description: Legal services or legal advice to people outside the company.
         tier: Prohibited
@@ -231,7 +251,8 @@ dimensions:
         tier: Low
       - id: external_reviewed
         description: Output goes to customers, partners, or the public after a person reviews it.
-        tier: Medium
+        tier: Low
+        notes: "Stage 6 recalibration (owner's blind eval labels): Medium -> Low."
       - id: external_direct
         description: AI interacts directly with customers or the public in real time, with no review of each response (chatbot, voice agent).
         tier: High
@@ -278,7 +299,8 @@ dimensions:
         tier: Low
       - id: customer_reliance_verified
         description: Output states facts customers may rely on (warranty terms, pricing, specs, policies), and a person verifies them first.
-        tier: Medium
+        tier: Low
+        notes: "Stage 6 recalibration (owner's blind eval labels): Medium -> Low."
       - id: customer_reliance_unverified
         description: Output states facts customers may rely on, with no per-response verification.
         tier: High
@@ -287,7 +309,8 @@ dimensions:
         tier: Medium
       - id: critical_reliance_unverified
         description: Output relied on for legal, regulatory, financial reporting, or safety purposes with no qualified verification.
-        tier: Prohibited
+        tier: High
+        notes: "Stage 6 recalibration (owner's blind eval labels): Prohibited -> High."
     notes: >
       Customer and critical reliance were first answered "Prohibited" outright,
       then split on follow-up by whether a person verifies before use. On a
@@ -381,7 +404,7 @@ vendor_requirements:
     notes: Derived from vendor_handling.vendor_trains = Prohibited, not asked separately.
   - id: zdr_available
     name: Zero data retention available
-    standard: Vendor offers zero data retention for our inputs and outputs.
+    standard: Vendor offers zero data retention for our inputs and outputs on the plan we purchase.
     severity: preferred
     notes: >
       Was must_have when derived from the Strict approved_tool definition.

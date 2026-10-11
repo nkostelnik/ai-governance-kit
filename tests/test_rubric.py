@@ -27,10 +27,10 @@ def test_governance_rubric_loads():
 
 def test_interview_answers_survive_loading():
     rubric = load_rubric()
-    assert rubric.dimension("accuracy_criticality").level("critical_reliance_unverified").tier == Tier.Prohibited
     assert rubric.aggregation.stacking.min_count == 3
     assert rubric.unknowns.rating == Tier.Medium
-    assert rubric.dimension("data_sensitivity").level("trade_secrets").tier_if_approved_tool is None
+    assert rubric.dimension("data_sensitivity").level("security_secrets").tier_if_approved_tool is None
+    assert rubric.dimension("personal_data").level("employee_hr").tier_if_approved_tool is None
 
 
 def test_calibration_changes_survive_loading():
@@ -38,9 +38,7 @@ def test_calibration_changes_survive_loading():
     data = rubric.dimension("data_sensitivity")
     assert data.level("internal").tier == Tier.Low
     assert data.level("privileged").tier_if_approved_tool == Tier.High
-    assert data.level("third_party_confidential").tier_if_approved_tool == Tier.High
     assert rubric.dimension("personal_data").level("employee_contact").tier_if_approved_tool == Tier.Low
-    assert rubric.dimension("accuracy_criticality").level("customer_reliance_verified").tier == Tier.Medium
     assert rubric.dimension("accuracy_criticality").level("critical_reliance_verified").tier == Tier.Medium
     assert "enterprise_limited_retention" in rubric.approved_tool.vendor_handling_levels
     assert rubric.dimension("personal_data").level("job_applicant").tier_if_approved_tool == Tier.High
@@ -163,3 +161,21 @@ def test_vendor_rule_proposing_unknown_level_is_rejected(raw):
     bad["vendor_review"]["default_level"] = "trust_me"
     with pytest.raises(ValidationError, match="unknown level"):
         Rubric.model_validate(bad)
+
+
+def test_stage6_recalibration_survives_loading():
+    rubric = load_rubric()
+    data, personal = rubric.dimension("data_sensitivity"), rubric.dimension("personal_data")
+    assert data.level("third_party_confidential").tier_if_approved_tool == Tier.Low
+    assert data.level("trade_secrets").tier_if_approved_tool == Tier.High
+    assert data.level("mnpi").tier_if_approved_tool == Tier.High
+    assert personal.level("customer_basic").tier_if_approved_tool == Tier.Low
+    assert personal.level("health").tier_if_approved_tool == Tier.High
+    assert personal.level("minors").tier_if_approved_tool == Tier.High
+    assert rubric.dimension("regulated_domain").level("minors_education").tier == Tier.High
+    assert rubric.dimension("regulated_domain").level("domain_not_individual").tier == Tier.Low
+    assert rubric.dimension("audience").level("external_reviewed").tier == Tier.Low
+    accuracy = rubric.dimension("accuracy_criticality")
+    assert accuracy.level("customer_reliance_verified").tier == Tier.Low
+    assert accuracy.level("critical_reliance_unverified").tier == Tier.High
+    assert rubric.aggregation.stacking.count_unknowns is False

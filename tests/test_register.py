@@ -171,7 +171,7 @@ def test_strike_needs_a_reason(rubric):
 
 def test_striking_a_wrong_inference_reopens_the_question_not_lower(rubric, approved_tool):
     intake = fixture("legal_sharepoint_search")
-    assert assess_use_case("UC-006", intake, approved_tool, "intake", rubric).result.tier == Tier.Prohibited
+    assert assess_use_case("UC-006", intake, approved_tool, "intake", rubric).result.tier == Tier.High
     struck, strike = strike_finding(intake, "accuracy_criticality", "critical_reliance_unverified", "A. Counsel",
                                     "legal", "Description is silent on verification", rubric, TODAY)
     assert "accuracy_criticality" in struck.unknown_dimensions

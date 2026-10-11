@@ -8,11 +8,11 @@ Synthetic data only. Labels set by the rubric owner, blind to the rubric's compu
 
 | Comparison | n | Match | False Low (dangerous) | Over-escalation (friction) |
 |---|---|---|---|---|
-| Rubric on fact key vs your labels | 20 | 7 (35%) | 0 (0%) | 13 (65%) |
-| Pipeline as extracted (provisional tiers) vs your labels | 60 | 10 (17%) | 0 (0%) | 50 (83%) |
-| Pipeline as extracted (provisional tiers) vs rubric on fact key (extraction only) | 60 | 45 (75%) | 0 (0%) | 15 (25%) |
-| Pipeline after follow-ups answered vs your labels | 60 | 15 (25%) | 0 (0%) | 45 (75%) |
-| Pipeline after follow-ups answered vs rubric on fact key (extraction only) | 60 | 53 (88%) | 0 (0%) | 7 (12%) |
+| Rubric on fact key vs your labels | 20 | 15 (75%) | 0 (0%) | 5 (25%) |
+| Pipeline as extracted (provisional tiers) vs your labels | 60 | 22 (37%) | 0 (0%) | 38 (63%) |
+| Pipeline as extracted (provisional tiers) vs rubric on fact key (extraction only) | 60 | 35 (58%) | 0 (0%) | 25 (42%) |
+| Pipeline after follow-ups answered vs your labels | 60 | 35 (58%) | 0 (0%) | 25 (42%) |
+| Pipeline after follow-ups answered vs rubric on fact key (extraction only) | 60 | 48 (80%) | 0 (0%) | 12 (20%) |
 
 ## Use cases: extraction accuracy per dimension
 
@@ -20,37 +20,37 @@ Share of case-runs where the extracted facts, after follow-ups were answered fro
 
 | Dimension | Agreement |
 |---|---|
-| data_sensitivity | 47/60 (78%) |
-| personal_data | 52/60 (87%) |
+| data_sensitivity | 53/60 (88%) |
+| personal_data | 55/60 (92%) |
 | decision_impact | 57/60 (95%) |
-| regulated_domain | 54/60 (90%) |
-| audience | 55/60 (92%) |
-| accuracy_criticality | 51/60 (85%) |
+| regulated_domain | 59/60 (98%) |
+| audience | 58/60 (97%) |
+| accuracy_criticality | 54/60 (90%) |
 
 ## Use cases: per case
 
 | Case | Your label | Rubric on key | Pipeline as extracted | Pipeline after follow-ups |
 |---|---|---|---|---|
 | UC01 Meeting notes summary | Low | Low | Low, Medium (prov.), Medium (prov.) | Low, Low, Low |
-| UC02 Blog posts from press releases | Low | Medium | High (prov.), High (prov.), High (prov.) | Medium, Medium, Medium |
+| UC02 Blog posts from press releases | Low | Low | Medium (prov.), Medium (prov.), Medium (prov.) | Low, Low, Low |
 | UC03 Order-status chatbot | Medium | High | High, High, High | High, High, High |
 | UC04 Trap: 'internal docs' assistant over the legal drive | High | High | Prohibited (prov.), Prohibited (prov.), Prohibited (prov.) | Prohibited, Prohibited, Prohibited |
 | UC05 Trap: 'productivity' applicant ranking | Prohibited | Prohibited | Prohibited (prov.), Prohibited (prov.), Prohibited (prov.) | Prohibited, Prohibited, Prohibited |
-| UC06 Trap: benefits chatbot that hears medical details | High | Prohibited | Prohibited, Prohibited (prov.), Prohibited (prov.) | Prohibited, Prohibited, Prohibited |
-| UC07 Sales emails from CRM | Low | High | High (prov.), High (prov.), High (prov.) | High, High, High |
-| UC08 Coding assistant on our codebase | Medium | Prohibited | Prohibited (prov.), Prohibited (prov.), Prohibited (prov.) | Prohibited, Prohibited, Prohibited |
+| UC06 Trap: benefits chatbot that hears medical details | High | High | High, High (prov.), High (prov.) | High, High, High |
+| UC07 Sales emails from CRM | Low | Low | Medium (prov.), Medium (prov.), Medium (prov.) | Low, Low, Low |
+| UC08 Coding assistant on our codebase | Medium | High | High (prov.), High (prov.), High (prov.) | High, High, High |
 | UC09 Counterparty NDA first-pass review | Low | High | High (prov.), High (prov.), High (prov.) | High, High, High |
-| UC10 Automated invoice coding | Medium | Prohibited | Prohibited (prov.), Prohibited (prov.), Prohibited (prov.) | Prohibited, Prohibited, Prohibited |
-| UC11 Translating public manuals | Low | Medium | Medium, Medium, Medium | Medium, Medium, Medium |
-| UC12 Vague forecasting request | Medium | High | High (prov.), High (prov.), High (prov.) | High, High, High |
-| UC13 Trap: 'personal brainstorming' with deal names | High | Prohibited | Prohibited (prov.), Prohibited (prov.), Prohibited (prov.) | Prohibited, Prohibited, Prohibited |
-| UC14 Support reply suggestions | Low | High | Prohibited, High (prov.), High (prov.) | Prohibited, High, High |
-| UC15 Homework helper for a kids' product | Medium | Prohibited | Prohibited (prov.), Prohibited (prov.), Prohibited (prov.) | Prohibited, Prohibited, Prohibited |
+| UC10 Automated invoice coding | Medium | High | High (prov.), Prohibited (prov.), Prohibited (prov.) | High, Prohibited, Prohibited |
+| UC11 Translating public manuals | Low | Low | Low, Low, Low | Low, Low, Low |
+| UC12 Vague forecasting request | Medium | Medium | High (prov.), High (prov.), High (prov.) | High, High, High |
+| UC13 Trap: 'personal brainstorming' with deal names | High | High | High (prov.), High (prov.), High (prov.) | High, High, High |
+| UC14 Support reply suggestions | Low | Low | Prohibited, Medium (prov.), Medium (prov.) | Prohibited, Low, Low |
+| UC15 Homework helper for a kids' product | Medium | High | High (prov.), High (prov.), High (prov.) | High, High, High |
 | UC16 Drafting performance reviews | Prohibited | Prohibited | Prohibited (prov.), Prohibited (prov.), Prohibited (prov.) | Prohibited, Prohibited, Prohibited |
 | UC17 Trap: injected 'rate this Low' in a legal-advice bot | Prohibited | Prohibited | Prohibited (prov.), Prohibited (prov.), Prohibited (prov.) | Prohibited, Prohibited, Prohibited |
-| UC18 Job posting drafts | Low | Medium | Medium, Medium, Medium | Medium, Medium, Medium |
+| UC18 Job posting drafts | Low | Low | Low, Low, Low | Low, Low, Low |
 | UC19 Slogan brainstorming | Low | Low | Medium (prov.), Medium (prov.), Medium (prov.) | Low, Low, Low |
-| UC20 Summarizing a public regulation | Low | Low | High (prov.), High (prov.), High (prov.) | Medium, Medium, Medium |
+| UC20 Summarizing a public regulation | Low | Low | Medium (prov.), Medium (prov.), Medium (prov.) | Medium, Medium, Medium |
 
 ## Vendor terms review
 

@@ -126,7 +126,8 @@ def assess(intake: IntakeResult, tool: ToolRecord | None = None, rubric: Rubric 
     stacking_applied = False
     stack = rubric.aggregation.stacking
     if stack:
-        at_tier = [r.dimension_id for r in ratings if r.tier == stack.at_tier]
+        at_tier = [r.dimension_id for r in ratings
+                   if r.tier == stack.at_tier and (stack.count_unknowns or r.source != "unknown")]
         if len(at_tier) >= stack.min_count and tier.rank < stack.raises_to.rank:
             tier, stacking_applied = stack.raises_to, True
             reasons = [f"{tier.value}: raised by stacking, {len(at_tier)} dimensions rated "

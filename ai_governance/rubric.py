@@ -83,6 +83,7 @@ class Stacking(Strict):
     min_count: int
     at_tier: Tier
     raises_to: Tier
+    count_unknowns: bool = True
 
     @model_validator(mode="after")
     def sensible(self):

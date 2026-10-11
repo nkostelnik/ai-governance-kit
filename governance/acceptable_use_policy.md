@@ -40,28 +40,29 @@ Employees, contractors, and vendors acting on our behalf.
 
 These are prohibited in any AI tool, approved or not:
 
-- Trade secrets or proprietary source code
 - Credentials, secrets, or security configurations
-- Material non-public information (MNPI)
 - Employee HR records (performance, compensation, discipline)
 - Government IDs or financial account numbers
-- Health or medical information
 - Biometric data
-- Data about minors
 - Other sensitive personal data (race, religion, sexual orientation, precise
   geolocation, immigration status)
 
 These are allowed **only in an approved tool**, after the use case is assessed:
 
 - Company confidential information (High tier)
-- Third-party confidential information held under an NDA or contract (High
-  tier). Check the NDA or contract first; it may restrict this use.
+- Trade secrets or proprietary source code (High tier)
+- Material non-public information (High tier). Insider trading and
+  confidentiality obligations still apply. VERIFY: [citation needed]
 - Privileged communications or attorney work product (High tier).
   VERIFY: [citation needed] (whether use in a third-party AI tool affects
   privilege or work product protection).
-- Customer or consumer basic data (High tier)
+- Health or medical information (High tier). VERIFY: [citation needed]
+- Data about minors (High tier). VERIFY: [citation needed]
 - Job applicant data such as resumes and interview notes (High tier). Using AI
   to evaluate, score, or rank candidates remains prohibited (section 5).
+- Third-party confidential information held under an NDA or contract (Low
+  tier). Check the NDA or contract first; it may restrict this use.
+- Customer or consumer basic data (Low tier)
 - Employee business contact information (Low tier)
 
 ## 5. Prohibited uses
@@ -70,10 +71,11 @@ These are allowed **only in an approved tool**, after the use case is assessed:
   without meaningful human review.
 - AI-assisted decisions about people in employment, credit or lending,
   insurance, housing, or health care, even with a human final call.
-- Education or services directed at minors.
 - Legal services or legal advice to people outside the company.
-- AI output relied on for legal, regulatory, financial reporting, or safety
-  purposes without verification by a qualified person.
+
+Education or services directed at minors, and AI output relied on for legal,
+regulatory, financial reporting, or safety purposes without verification by a
+qualified person, are not prohibited but are always High tier.
 
 An exception to any prohibited use requires the joint approval of the General
 Counsel and the AI governance committee, recorded in the register.
@@ -83,7 +85,8 @@ Counsel and the AI governance committee, recorded in the register.
 Describe the proposed use in the AI intake. It is rated on seven dimensions
 (data sensitivity, personal data, decision impact, regulated domain, audience,
 vendor data handling, accuracy criticality) and the highest rating sets the
-tier. Three or more Medium ratings make the use High.
+tier. Three or more Medium ratings make the use High (facts not yet
+established do not count toward this).
 
 | Tier | What it takes | Who approves | Review |
 |---|---|---|---|

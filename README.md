@@ -156,7 +156,10 @@ through the engine as end-to-end tests at no cost. In an approved
 zero-retention tool they land at: email rewrite Medium (provisional),
 warranty chatbot High, Legal SharePoint search Prohibited, resume screener
 Prohibited, "Sales wants to try AI" High (six unknowns stack). Without a
-registered tool, all five are Prohibited.
+registered tool, all five are Prohibited. (These were the tiers under the
+rubric at Stage 3. After the Stage 6 recalibration, the Legal SharePoint
+search is High and "Sales wants to try AI" is Medium; the tests track the
+current rubric.)
 
 ```
 python -m ai_governance.tiering tests/fixtures/intakes/warranty_chatbot.json enterprise_zdr
@@ -330,6 +333,53 @@ What this says, honestly:
 6. **Both traps that matter most were caught every run:** the planted "rate
    this Low" instruction was ignored (UC17 Prohibited, 3/3) and the
    "productivity" hiring screen was Prohibited (3/3).
+
+### Recalibration from the evals
+
+The rubric owner reviewed the disagreement log and changed eleven settings
+in `rubric.yaml` (each marked "Stage 6 recalibration" in its notes):
+customer basic data and third-party confidential data are Low in an approved
+tool; reviewed external output, verified customer-facing facts, and
+regulated-domain work not about specific people are Low; trade secrets, MNPI,
+health data, and data about minors moved from absolute bans to High in an
+approved tool; services directed at minors and unverified critical reliance
+moved from Prohibited to High; unknown facts no longer count toward
+stacking; and the zero-retention standard now reads "on the plan we
+purchase". The acceptable use policy was updated to match.
+
+| Comparison (same saved outputs, re-scored for free) | Before | After |
+|---|---|---|
+| Rubric on fact key vs labels: match | 35% | **75%** |
+| Rubric on fact key vs labels: false Low | 0% | **0%** |
+| Pipeline after follow-ups vs labels: match | 25% | **58%** |
+| Pipeline after follow-ups vs labels: false Low | 0% | **0%** |
+| Extraction only (pipeline vs fact key): match | 88% | 80% |
+
+Notes, honestly:
+
+- **One fact-key correction.** Re-scoring at first showed three false Lows
+  (all UC06, the benefits chatbot). The cause was the fact key, not the
+  model: the key tagged UC06 as employee HR records, which the rubric defines
+  as performance, compensation, and discipline. The key was corrected (and
+  the correction recorded in `use_cases.yaml`); the model had found health
+  information every run, which now gives the owner's label exactly.
+- **Extraction match fell from 88% to 80%** because the rubric now
+  distinguishes more finely below High: over-inferences that used to be
+  hidden inside a High result (for example "IT how-tos" read as credentials)
+  now change the tier. Every remaining extraction error is still in the safe
+  direction.
+- **Stacking can no longer fire on real facts.** With unknowns excluded, only
+  one intake level (verified critical reliance) is still Medium, so the
+  "three Mediums" rule is unreachable today. It is kept in the YAML and
+  tested against a modified rubric in case Medium levels return.
+- **Five cases still disagree with the owner's labels**, all over-escalation:
+  UC03 (live chatbot), UC08 (source code), UC09 (counterparty NDAs, because
+  privileged material is still High), UC10 (auto-posted invoices), and UC15
+  (kids' homework helper). The owner kept those rubric positions; they are
+  documented as deliberate strictness in `DISAGREEMENTS.md`.
+- The vendor results do not change: the Pellucid label (plan-gated zero
+  retention counted as a gap) predates the new standard wording, and was not
+  re-labeled.
 
 Raw outputs of this run are committed in `evals/results/20261010-210739/`, so
 the numbers can be re-scored without new API calls:
