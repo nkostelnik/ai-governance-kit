@@ -428,6 +428,28 @@ again labeled ordinary customer data as "third-party confidential". After
 the Stage 6 recalibration that no longer changes the tier, but it is a known
 over-inference.
 
+## Optional: local intake web form
+
+[`webapp.py`](webapp.py) is a small local page built on the Python standard
+library (no new dependencies) over the same functions as the command line:
+a request form, the use case page (open questions as button-style choices,
+then sign-off), and the register.
+
+```
+python webapp.py              # http://127.0.0.1:8765, one Claude call per request (about $0.01)
+python webapp.py --fake-llm   # no API calls: every fact comes back unknown, so every question is asked
+```
+
+Honest limits: it is a **local demo**. It binds to 127.0.0.1 and has no
+login, so anyone using the page can sign as any role; the sign-off page
+illustrates the workflow and is not a control. There is no CSRF protection,
+for the same reason. All text from records is HTML-escaped (tested), and the
+memo page is the same markdown memo converted to HTML, so the page and the
+`.md` file cannot disagree. Checked in a browser with `--fake-llm`: request,
+answers, sign-off, approved record in the register, no console errors, no
+horizontal scroll at phone width. Tests: `tests/test_webapp.py` runs the full
+flow against a real local server with the extraction faked.
+
 ## Setup
 
 ```
