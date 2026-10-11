@@ -1,8 +1,14 @@
 # AI Governance Kit
 
+![AI Governance Kit: tiers proposed AI uses and reviews AI vendor terms against an attorney's rubric](docs/social-preview.png)
+
 > **Demonstration project.** Synthetic data only. Every output requires
 > attorney review and is not legal advice. Nothing here claims compliance
-> with any law.
+> with any law. `governance/rubric.yaml` and the acceptable use policy are a
+> demonstration rubric and policy built from the author's interview answers
+> for this project; they do not reflect the positions of any client or
+> employer. All vendors, people, and requests in the samples and evals are
+> fictional.
 
 A toolkit for a corporate legal department to enable AI use without creating
 unmanaged risk. Companion to
@@ -465,3 +471,7 @@ environment; it is never committed. Smoke test one synthetic intake:
 ```
 python -m ai_governance.intake samples/intakes/warranty_chatbot.txt
 ```
+
+## License
+
+MIT. See [LICENSE](LICENSE). The rubric, policy, and samples are demonstration material, not legal advice.
