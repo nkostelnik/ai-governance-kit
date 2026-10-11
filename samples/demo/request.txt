@@ -1,0 +1,1 @@
+SYNTHETIC DEMO REQUEST. The customer success team wants to use the Corvane assistant to draft renewal reminder emails to existing customers, using the customer name, plan, and renewal date from our billing system. A customer success manager reviews and edits every email before sending it. Business owner is Jordan Lee, Director of Customer Success.

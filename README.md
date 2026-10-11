@@ -21,7 +21,7 @@ attorney-authored rubric. The model never picks the tier.
 | 4 | AI vendor terms review | Done; smoke-tested live on 2 synthetic vendors |
 | 5 | Register, reassessment triggers, decision memo | Done |
 | 6 | Eval harness (false-Low rate and over-escalation rate) | Done; baseline results below |
-| 7 | CLI (`assess.py`, `vendor_review.py`, `register.py`) | Built and tested; live demo pending |
+| 7 | CLI (`assess.py`, `vendor_review.py`, `register.py`) | Done; live demo below |
 
 ## What exists today
 
@@ -389,6 +389,44 @@ python evals/run_evals.py --offline                     # free: labels vs rubric
 python evals/run_evals.py --rescore 20261010-210739     # free: re-score the saved run
 python evals/run_evals.py --runs 3                      # live, about $0.85
 ```
+
+## Stage 7: command line
+
+Three commands. Each writes markdown for people and JSON for systems, and
+prints its approximate API cost.
+
+| Command | What it does | API calls |
+|---|---|---|
+| [`assess.py`](assess.py) | Intake a proposed use, ask open questions as numbered choices (no free text; `--no-input` skips them), tier it, **save it to the register** with the next UC number, write the decision memo | 1 (about $0.01) |
+| [`vendor_review.py`](vendor_review.py) | Review vendor terms (.txt, .docx, text .pdf); with `--register`, record the tool with the *proposed* level; changed documents clear the tool's approval and flag its uses | 8 (about $0.04) |
+| [`register.py`](register.py) | `list`, `confirm`, `answer`, `strike`, `sign`, `exception`, `trigger`, `overdue`, `memo` | none |
+
+Every assessment is saved, so nothing assessed goes unrecorded; saving never
+approves anything. Answering a question or striking a finding re-tiers the
+use and clears earlier sign-offs, because the facts they approved changed.
+
+### Quick start (the Stage 7 demo, about $0.05)
+
+```
+python vendor_review.py evals/vendors/corvane/terms.txt --register corvane --name "Corvane Assistant (synthetic)" --vendor "Corvane (fictional)" --out-dir samples/demo
+python register.py --out-dir samples/demo confirm corvane enterprise_zdr --by "A. Counsel (demo)"
+python assess.py --file samples/demo/request.txt --tool corvane --no-input --out-dir samples/demo
+python register.py --out-dir samples/demo answer UC-001 regulated_domain no_regulated_domain
+python register.py --out-dir samples/demo sign UC-001 --role business_owner --by "Jordan Lee (demo)"
+python register.py list
+```
+
+What happened on the recorded run: Corvane came back with no gaps and a
+proposed level of `enterprise_zdr`; counsel confirmed it and it was listed
+as approved; the renewal-reminder request was Medium and provisional with
+one open question (regulated domain, which the description did not
+address); once answered it was Low, needed only the business owner's
+signature, and was approved with a review date a year out. The outputs are
+in [`samples/demo/`](samples/demo/) and the records in [`register/`](register/),
+all synthetic. One carry-over from the evals shows up here too: the model
+again labeled ordinary customer data as "third-party confidential". After
+the Stage 6 recalibration that no longer changes the tier, but it is a known
+over-inference.
 
 ## Setup
 

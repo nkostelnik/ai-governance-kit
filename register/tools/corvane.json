@@ -1,0 +1,37 @@
+{
+  "id": "corvane",
+  "name": "Corvane Assistant (synthetic)",
+  "vendor": "Corvane (fictional)",
+  "proposed_level": "enterprise_zdr",
+  "confirmed_level": "enterprise_zdr",
+  "listed_as_approved": true,
+  "blockers": [],
+  "flags": [],
+  "documents": {
+    "terms.txt": "20d6839f2c0c5b364b29a6c7f6393f06e874fd5f45e7a854f64eedf886828a6d"
+  },
+  "approved_on": "2026-10-10",
+  "history": [
+    {
+      "at": "2026-10-11T01:41:38+00:00",
+      "actor": "vendor_review.py",
+      "role": "system",
+      "action": "vendor review recorded",
+      "detail": "Proposed enterprise_zdr: zdr_available is met. An attorney confirms when registering the tool."
+    },
+    {
+      "at": "2026-10-11T01:41:52+00:00",
+      "actor": "A. Counsel (demo)",
+      "role": "legal",
+      "action": "level confirmed",
+      "detail": "enterprise_zdr"
+    },
+    {
+      "at": "2026-10-11T01:41:52+00:00",
+      "actor": "A. Counsel (demo)",
+      "role": "legal",
+      "action": "listed as approved",
+      "detail": ""
+    }
+  ]
+}
