@@ -20,7 +20,7 @@ attorney-authored rubric. The model never picks the tier.
 | 3 | Tiering engine (deterministic, unit-tested) | Done |
 | 4 | AI vendor terms review | Done; smoke-tested live on 2 synthetic vendors |
 | 5 | Register, reassessment triggers, decision memo | Done |
-| 6 | Eval harness (false-Low rate and over-escalation rate) | Not started |
+| 6 | Eval harness (false-Low rate and over-escalation rate) | Done; baseline results below |
 | 7 | CLI (`assess.py`, `vendor_review.py`) | Not started |
 
 ## What exists today
@@ -262,6 +262,82 @@ the resume screener (Prohibited, exception path).
 
 ```
 python samples/memos/make_samples.py
+```
+
+## Stage 6: evals
+
+[`evals/`](evals/) holds 20 synthetic use cases (including the traps: an
+"internal docs" assistant over the legal drive, a hiring screen called
+"productivity", a benefits bot that hears medical details, "personal
+brainstorming" about unannounced deals, and a description that tells the
+reviewer to rate it Low) and 5 synthetic vendor term sets (clean; trains by
+default; FAQ promise contradicted by a controlling addendum; silent; limited
+retention with weak security notice). The rubric owner labeled the expected
+tier of every use case and the gaps in every vendor set, blind to what the
+rubric computes ([`labels.json`](evals/labels.json)).
+
+**Three comparisons, so a wrong tier can be traced to its cause.** Each case
+also has a fact key: the levels the case text establishes. Running the
+rubric on the fact key shows what the rubric says with perfect extraction.
+
+- your label vs rubric on the fact key: **rubric disagreement** (refine the YAML);
+- rubric on the fact key vs full pipeline: **extraction error** (the model misread);
+- your label vs full pipeline: what a user of the kit would experience.
+
+Below the label is a **false Low** (the dangerous error). Above it is
+**over-escalation** (friction). Both are reported.
+
+### Baseline results (2026-10-10, 3 runs, about $0.85)
+
+| Comparison | n | Match | False Low | Over-escalation |
+|---|---|---|---|---|
+| Rubric on fact key vs labels | 20 | 35% | **0%** | 65% |
+| Pipeline after follow-ups answered vs fact key (extraction only) | 60 | 88% | **0%** | 12% |
+| Pipeline after follow-ups answered vs labels | 60 | 25% | **0%** | 75% |
+| Vendor requirements vs labels | 120 | 88% | 3 missed gaps | 11 false gaps |
+
+What this says, honestly:
+
+1. **No false Lows anywhere** in 60 pipeline runs or in the rubric itself.
+   Every use-case error is in the safe direction.
+2. **The rubric, not the model, is the main source of friction.** Applied to
+   the correct facts, it rates 13 of 20 cases higher than the rubric owner
+   would. The patterns: customer data is High even with a person reviewing;
+   any reviewed external output is Medium; and the absolute prohibitions
+   (trade secrets, MNPI, health data, minors) are stricter than the owner's
+   case-by-case judgment. These are listed in
+   [`DISAGREEMENTS.md`](evals/DISAGREEMENTS.md) for rubric refinement.
+3. **Extraction is good but over-infers.** Once follow-up questions are
+   answered, extracted facts give the same rating as the fact key 78% to 95%
+   of the time per dimension, and 88% of tiers match. The misses are all
+   added risk: CRM customer data labeled "third-party confidential"; "IT
+   how-tos" read as credentials; "HR policies" read as employee HR records;
+   "refund eligibility" read once as a credit decision. Some disputed calls
+   may be the fact key's fault (an NDA issues list "sent to the other side"
+   arguably is external output).
+4. **Silence costs follow-ups, by design.** As extracted, most results are
+   provisional because descriptions rarely say what a use is *not* ("no
+   personal data", "not a regulated domain"). The fail-closed rule turns
+   that into questions rather than assumptions. It shows up as 83%
+   over-escalation on provisional tiers, falling to 75% once answered.
+5. **Vendor review: 3 missed gaps, all the same call.** Pellucid offers zero
+   retention only on Enterprise plans; the owner labeled that a gap, the
+   model read it as met. The standard ("vendor offers zero data retention")
+   does not say "on our plan", so the fix is the standard's wording. The 11
+   false gaps are stricter readings (a "good-faith discussion" objection
+   right counted as no objection right; confidentiality undercut by a
+   training reservation).
+6. **Both traps that matter most were caught every run:** the planted "rate
+   this Low" instruction was ignored (UC17 Prohibited, 3/3) and the
+   "productivity" hiring screen was Prohibited (3/3).
+
+Raw outputs of this run are committed in `evals/results/20261010-210739/`, so
+the numbers can be re-scored without new API calls:
+
+```
+python evals/run_evals.py --offline                     # free: labels vs rubric only
+python evals/run_evals.py --rescore 20261010-210739     # free: re-score the saved run
+python evals/run_evals.py --runs 3                      # live, about $0.85
 ```
 
 ## Setup

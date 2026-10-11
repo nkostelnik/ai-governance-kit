@@ -3,7 +3,8 @@
 
 # local artifacts
 output/
-evals/results/
+evals/results/*
+!evals/results/20261010-210739/
 *.db
 
 # python
