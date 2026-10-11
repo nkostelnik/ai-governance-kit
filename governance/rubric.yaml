@@ -439,6 +439,26 @@ vendor_review:
     Rules chosen by the rubric owner at Stage 4 design. default_level treats
     a vendor with no ZDR and no deletion commitment like a consumer tool.
 
+# Register rules (Stage 5).
+register_rules:
+  # Who may strike a finding the model extracted, before sign-off. Chosen to
+  # be independent of the requester at every tier (the business owner is an
+  # approver at every tier, so "any approver" would let the requester side
+  # lower its own risk).
+  strike_roles: [legal, ai_enablement_lead]
+  # Who confirms a tool's vendor_handling level and lists it as approved.
+  tool_confirm_roles: [legal]
+  # Reassessment triggers detected automatically by comparing a resubmitted
+  # use case with its saved snapshot. Any new level in these dimensions fires
+  # the trigger, even one that cannot raise the tier.
+  level_triggers:
+    new_data_type: [data_sensitivity, personal_data]
+    expanded_audience: [audience]
+    more_automation: [decision_impact]
+  # new_vendor fires when the tool changes; vendor_terms_change when the tool's
+  # vendor review is re-run on different documents. The rest are recorded by hand.
+  manual_triggers: [new_purpose, incident_or_complaint, new_jurisdiction, regulatory_change]
+
 # Laws that may bear on a level. Nothing here is a legal conclusion.
 # status VERIFY = counsel must confirm; status verified requires a citation and a date.
 regulatory_flags:

@@ -19,7 +19,7 @@ attorney-authored rubric. The model never picks the tier.
 | 2 | Intake pipeline (fact extraction with quotes) | Done; smoke-tested live on 5 samples |
 | 3 | Tiering engine (deterministic, unit-tested) | Done |
 | 4 | AI vendor terms review | Done; smoke-tested live on 2 synthetic vendors |
-| 5 | Register, reassessment triggers, decision memo | Not started |
+| 5 | Register, reassessment triggers, decision memo | Done |
 | 6 | Eval harness (false-Low rate and over-escalation rate) | Not started |
 | 7 | CLI (`assess.py`, `vendor_review.py`) | Not started |
 
@@ -212,6 +212,57 @@ so Quillmark is correctly blocked until that term is negotiated.
 Known rough edge: when a requirement is simply absent but the model marks it
 "addressed" with only context evidence, the gap is labeled "unresolved"
 rather than "not addressed". Both are gaps; only the label differs.
+
+## Stage 5: register, reassessment, decision memo
+
+[`ai_governance/register.py`](ai_governance/register.py) and
+[`ai_governance/memo.py`](ai_governance/memo.py). Plain Python, no API calls.
+
+- **Storage: one JSON file per record** (`register/tools/`, `register/use_cases/`),
+  validated by Pydantic on every load. Chosen over SQLite because counsel can
+  read a record without tools, every change is a git diff (the audit trail,
+  reviewable like a redline), and a legal department's AI register is tens to
+  hundreds of records. With many concurrent writers or thousands of records,
+  SQLite or a GRC system would be the better choice. Every record also stores
+  the sha256 of the rubric it was assessed against.
+- **Tools.** A vendor review creates a tool record with the *proposed*
+  vendor level. Only counsel (`register_rules.tool_confirm_roles`) can confirm
+  it, and the tool is listed as approved only if the level is an approved-tool
+  level and no must-have gap is open. If the vendor's documents change, the
+  confirmation is cleared and every use of the tool is flagged for
+  reassessment.
+- **Use cases.** Each record snapshots the verified facts and the tier result,
+  with status (provisional, awaiting sign-off, approved, prohibited,
+  exception granted, reassessment required), sign-offs, and an append-only
+  history. A use is approved only when every approver its tier requires has
+  signed and the tool is listed as approved; the next review date follows
+  the rubric cadence. A Prohibited use can proceed only by joint exception
+  (General Counsel and AI governance committee) with a written reason.
+- **Reviewer corrections.** Counsel or the AI enablement lead
+  (`register_rules.strike_roles`) can strike a finding the model got wrong,
+  with a written reason that appears in the memo. Striking never lowers risk
+  by default: a dimension left empty becomes unknown again and needs an
+  answer. The business owner cannot strike, because the business owner is an
+  approver at every tier and is usually the requester's side.
+- **Reassessment triggers.** A resubmitted use is compared with its snapshot:
+  any new data, audience, or automation level, or a different tool, fires the
+  matching trigger. Vendor terms changes propagate from the tool. Incidents,
+  new jurisdictions, new purposes, and regulatory changes are recorded by
+  hand. `overdue()` lists records past their review date.
+- **Decision memo.** Markdown, generated only from the record (no model):
+  tier and why, a facts table with supporting quotes and their basis
+  (stated, inferred, answered, register), reviewer corrections, controls,
+  laws to check (still VERIFY), open items, vendor status, review dates, and
+  signature lines for the tier's approvers.
+
+Sample memos generated from the smoke-test intakes are in
+[`samples/memos/`](samples/memos/): an approved Low use, the Legal SharePoint
+search after counsel struck a worst-case inference (High, provisional), and
+the resume screener (Prohibited, exception path).
+
+```
+python samples/memos/make_samples.py
+```
 
 ## Setup
 

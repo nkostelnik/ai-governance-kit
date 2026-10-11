@@ -218,6 +218,13 @@ class VendorReview(Strict):
     notes: str | None = None
 
 
+class RegisterRules(Strict):
+    strike_roles: list[str]
+    tool_confirm_roles: list[str]
+    level_triggers: dict[str, list[str]]     # trigger id -> dimension ids
+    manual_triggers: list[str]
+
+
 class RegulatoryFlag(Strict):
     id: str
     topic: str
@@ -248,6 +255,7 @@ class Rubric(Strict):
     review: Review
     vendor_requirements: list[VendorRequirement]
     vendor_review: VendorReview
+    register_rules: RegisterRules
     regulatory_flags: list[RegulatoryFlag]
 
     @model_validator(mode="after")
@@ -277,6 +285,19 @@ class Rubric(Strict):
         for level_id in [*(r.propose for r in self.vendor_review.level_rules), self.vendor_review.default_level]:
             if not self._has_level("vendor_handling", level_id):
                 raise ValueError(f"vendor_review proposes unknown level 'vendor_handling.{level_id}'")
+
+        reg = self.register_rules
+        for role in [*reg.strike_roles, *reg.tool_confirm_roles]:
+            if role not in self.approvers.catalog:
+                raise ValueError(f"register names unknown role {role!r}")
+        triggers = set(self.review.reassessment_triggers)
+        for trigger_id in [*reg.level_triggers, *reg.manual_triggers]:
+            if trigger_id not in triggers:
+                raise ValueError(f"register names unknown trigger {trigger_id!r}")
+        for dims in reg.level_triggers.values():
+            for dim_id in dims:
+                if not any(d.id == dim_id for d in self.dimensions):
+                    raise ValueError(f"register trigger names unknown dimension {dim_id!r}")
 
         refs = [(f"flag {f.id!r}", ref) for f in self.regulatory_flags for ref in f.applies_to]
         refs += [(f"triggered control {t.control!r}", ref) for t in self.controls.triggered for ref in t.triggered_by]
