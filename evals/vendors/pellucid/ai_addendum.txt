@@ -1,0 +1,22 @@
+PELLUCID AI SERVICES ADDENDUM
+SYNTHETIC EVAL SAMPLE: fictional vendor, written for testing. Not a real agreement.
+
+1. Order of Precedence. This Addendum controls over any website content, FAQ, or documentation.
+
+2. Definitions. "Service Data" means usage data, telemetry, and Inputs and Outputs as processed by the Service.
+
+3. Use of Service Data. Pellucid may use Service Data to develop, maintain, and improve the Service and its underlying models.
+
+4. Zero Data Retention. On Enterprise plans, Customer may enable zero data retention, in which case Pellucid does not store Inputs or Outputs after processing.
+
+5. Deletion. Pellucid deletes all Inputs and Outputs no later than the date this Addendum terminates.
+
+6. Subprocessors. Pellucid lists its subprocessors on its trust site, provides 30 days' advance notice of changes, and Customer may object and terminate if Pellucid proceeds over the objection.
+
+7. Ownership. Customer owns Outputs.
+
+8. Confidentiality. Inputs and Outputs are Customer's Confidential Information.
+
+9. Security. Pellucid maintains a SOC 2 Type II report and will notify Customer within 72 hours of a breach affecting Customer data.
+
+10. Indemnity. Pellucid's intellectual property indemnity covers the Service. It does not apply to Outputs.

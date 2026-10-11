@@ -1,0 +1,8 @@
+PELLUCID ENTERPRISE: FREQUENTLY ASKED QUESTIONS
+SYNTHETIC EVAL SAMPLE: fictional vendor, written for testing.
+
+Does Pellucid train on my prompts? No. Pellucid does not train on customer prompts.
+
+Is zero data retention available? Yes. Enterprise customers can enable zero data retention for any project.
+
+Who owns what I create? You do. Outputs belong to you.

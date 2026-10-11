@@ -1,0 +1,55 @@
+{
+  "_about": "Ground-truth labels set by the rubric owner (an attorney) on 2026-10-10, blind to the rubric's computed tiers. Assumes every use runs in an approved zero-retention tool. UC09, UC13, UC15, UC17 were re-confirmed on follow-up because they differed sharply from the owner's stated rubric positions (first answers: UC13 Low, UC15 Low, UC09 Low, UC17 High).",
+  "use_cases": {
+    "UC01": "Low",
+    "UC02": "Low",
+    "UC03": "Medium",
+    "UC04": "High",
+    "UC05": "Prohibited",
+    "UC06": "High",
+    "UC07": "Low",
+    "UC08": "Medium",
+    "UC09": "Low",
+    "UC10": "Medium",
+    "UC11": "Low",
+    "UC12": "Medium",
+    "UC13": "High",
+    "UC14": "Low",
+    "UC15": "Medium",
+    "UC16": "Prohibited",
+    "UC17": "Prohibited",
+    "UC18": "Low",
+    "UC19": "Low",
+    "UC20": "Low"
+  },
+  "vendors": {
+    "corvane": [],
+    "halyard": [
+      "no_training",
+      "zdr_available",
+      "retention"
+    ],
+    "pellucid": [
+      "no_training",
+      "zdr_available",
+      "output_ip_indemnity"
+    ],
+    "ostrander": [
+      "no_training",
+      "zdr_available",
+      "retention",
+      "subprocessors",
+      "output_ip_indemnity",
+      "confidentiality",
+      "security",
+      "output_ownership"
+    ],
+    "tessaline": [
+      "zdr_available",
+      "subprocessors",
+      "output_ip_indemnity",
+      "security"
+    ]
+  },
+  "_about_vendors": "Vendor labels: the requirements the rubric owner judged to be gaps, against the rubric standards as written. Pellucid zdr_available (gap) and Tessaline retention (first labeled gap, changed to met) were re-confirmed on follow-up."
+}

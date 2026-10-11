@@ -1,0 +1,18 @@
+TESSALINE AI MASTER SERVICES AGREEMENT
+SYNTHETIC EVAL SAMPLE: fictional vendor, written for testing. Not a real agreement.
+
+1. Definitions. "Customer Content" means Customer's inputs to the Service and the outputs the Service generates for Customer ("Outputs").
+
+2. No Training. Tessaline does not use Customer Content to train or improve any model.
+
+3. Retention. Tessaline does not offer zero-retention processing. Tessaline retains Customer Content for 30 days for abuse and fraud monitoring and then deletes it. All Customer Content is deleted no later than the effective date of termination.
+
+4. Subprocessors. Tessaline publishes its subprocessor list and will give Customer 30 days' notice before engaging a new subprocessor.
+
+5. Ownership. Customer owns all Outputs.
+
+6. Confidentiality. Customer Content is Customer's Confidential Information.
+
+7. Security. Tessaline maintains a SOC 2 Type II report and will notify Customer of a security breach affecting Customer Content within five business days.
+
+8. IP Indemnity. Tessaline will indemnify Customer against third-party claims that Outputs infringe intellectual property rights, provided the Outputs were used unmodified and were not combined with other content.
