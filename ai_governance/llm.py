@@ -93,3 +93,16 @@ def _call(client, system, content, output_format, effort):
         betas=["server-side-fallback-2026-07-01"],
         fallbacks="default",
     )
+
+
+class CostRecorder:
+    """Wraps a call function (llm.parse by default) and totals its cost."""
+
+    def __init__(self, call=None):
+        self.call = call or parse
+        self.cost = 0.0
+
+    def __call__(self, *args, **kwargs) -> LLMResult:
+        result = self.call(*args, **kwargs)
+        self.cost += result.cost_usd()
+        return result

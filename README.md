@@ -21,7 +21,7 @@ attorney-authored rubric. The model never picks the tier.
 | 4 | AI vendor terms review | Done; smoke-tested live on 2 synthetic vendors |
 | 5 | Register, reassessment triggers, decision memo | Done |
 | 6 | Eval harness (false-Low rate and over-escalation rate) | Done; baseline results below |
-| 7 | CLI (`assess.py`, `vendor_review.py`) | Not started |
+| 7 | CLI (`assess.py`, `vendor_review.py`, `register.py`) | Built and tested; live demo pending |
 
 ## What exists today
 

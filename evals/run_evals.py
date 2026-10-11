@@ -45,18 +45,6 @@ def key_intake(case: dict, rubric: Rubric) -> IntakeResult:
                         needs_review=[], rejected=[], follow_ups=[])
 
 
-class Recorder:
-    """Wraps llm.parse to total the cost of a run."""
-
-    def __init__(self):
-        self.cost = 0.0
-
-    def __call__(self, *args, **kwargs):
-        result = llm.parse(*args, **kwargs)
-        self.cost += result.cost_usd()
-        return result
-
-
 def describe_ratings(result: TierResult) -> str:
     return ", ".join(f"{r.dimension_id}={r.tier.value}" + (f" ({r.driver_level})" if r.driver_level else " (unknown)")
                      for r in result.ratings if r.source != "register")
@@ -76,7 +64,7 @@ def main() -> None:
     stamp = args.rescore or datetime.now().strftime("%Y%m%d-%H%M%S")
     raw_dir = EVALS / "results" / stamp
     live = not args.offline
-    recorder = Recorder()
+    recorder = llm.CostRecorder()
     report, log = [], []
 
     report += ["# Eval results", "",
